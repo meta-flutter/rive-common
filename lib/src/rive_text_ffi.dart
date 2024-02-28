@@ -28,14 +28,7 @@ DynamicLibrary _loadLibrary() {
         } on ArgumentError catch (_) {}
       }
     } else if (Platform.isLinux) {
-      for (final path in paths) {
-        try {
-          return DynamicLibrary.open(
-            '${path}shared_lib/build/bin/debug/librive_text.so',
-          );
-          // ignore: avoid_catching_errors
-        } on ArgumentError catch (_) {}
-      }
+      return DynamicLibrary.open('librive_text.so');
     }
   }
 

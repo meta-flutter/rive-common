@@ -31,6 +31,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+set(CMAKE_CXX_VISIBILITY_PRESET hidden)
+set(CMAKE_C_VISIBILITY_PRESET hidden)
+set(CMAKE_VISIBILITY_INLINES_HIDDEN ON)
+
 string(APPEND CMAKE_C_FLAGS " -Wall -ansi -pedantic -Wno-unused-function -Wno-unused-variable")
 string(APPEND CMAKE_C_FLAGS " -fno-exceptions -fno-rtti -fno-unwind-tables")
 string(APPEND CMAKE_C_FLAGS " -flto=full")
@@ -305,10 +309,7 @@ target_include_directories(rive_text PUBLIC
     third_party/miniaudio
 )
 
-target_link_libraries(rive_text PUBLIC
-    rive_sheenbidi
-    ${TAFFY_FFI_LINK_LIBRARY}
-)
+target_link_libraries(rive_text PUBLIC rive_sheenbidi)
 
 target_compile_definitions(rive_text PRIVATE ANSI_DECLARATORS)
 
