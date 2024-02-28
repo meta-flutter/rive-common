@@ -1,0 +1,9 @@
+[submodule "third_party/harfbuzz"]
+	path = third_party/harfbuzz
+	url = https://github.com/harfbuzz/harfbuzz.git
+[submodule "third_party/sheenbidi"]
+	path = third_party/sheenbidi
+	url = https://github.com/Tehreer/SheenBidi.git
+[submodule "third_party/miniaudio"]
+	path = third_party/miniaudio
+	url = https://github.com/rive-app/miniaudio.git
