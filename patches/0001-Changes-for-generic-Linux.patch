@@ -91,7 +91,7 @@ index fd4bee3..d241190 100644
    plugin_platform_interface: ^2.0.2
 -  rive_common: 0.2.9
 +  rive_common:
-+    path: /mnt/raid10/workspace-automation/app/rive-common_0.3.0
++    path: ../rive-common
  dev_dependencies:
    flutter_test:
      sdk: flutter
