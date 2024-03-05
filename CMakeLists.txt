@@ -289,7 +289,6 @@ add_library(rive_text SHARED
 )
 
 set_target_properties(rive_text PROPERTIES
-    PREFIX         ""
     SOVERSION      "${PROJECT_VERSION}"
 )
 
