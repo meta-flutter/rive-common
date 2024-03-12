@@ -1,35 +1,34 @@
-local dependency = require 'dependency'
+local dependency = require('dependency')
 
-harfbuzz = dependency.github('harfbuzz/harfbuzz', '6.0.0')
+harfbuzz = dependency.github('rive-app/harfbuzz', 'rive_8.3.0')
 sheenbidi = dependency.github('Tehreer/SheenBidi', 'v2.6')
-miniaudio = dependency.github('rive-app/miniaudio', 'rive')
+miniaudio = dependency.github('rive-app/miniaudio', 'rive_changes')
+yoga = dependency.github('rive-app/yoga', 'rive_changes_v2_0_1')
 
-workspace 'rive_text'
-configurations {'debug', 'release'}
+workspace('rive_text')
+configurations({ 'debug', 'release' })
 
 source = os.isdir('../../packages/runtime') and '../../packages/runtime' or 'macos/rive-cpp'
 
-project 'rive_sheenbidi'
+project('rive_sheenbidi')
 do
-    kind 'StaticLib'
-    language 'C'
-    toolset 'clang'
-    targetdir 'shared_lib/build/bin/%{cfg.buildcfg}/'
-    objdir 'shared_lib/build/obj/%{cfg.buildcfg}/'
+    kind('StaticLib')
+    language('C')
+    toolset('clang')
+    targetdir('shared_lib/build/bin/%{cfg.buildcfg}/')
+    objdir('shared_lib/build/obj/%{cfg.buildcfg}/')
 
-    includedirs {
-        sheenbidi .. '/Headers'
-    }
+    includedirs({ sheenbidi .. '/Headers' })
 
-    filter {'options:arch=wasm'}
+    filter({ 'options:arch=wasm' })
     do
-        targetdir 'wasm/build/bin/%{cfg.buildcfg}/'
-        objdir 'wasm/build/obj/%{cfg.buildcfg}/'
+        targetdir('wasm/build/bin/%{cfg.buildcfg}/')
+        objdir('wasm/build/obj/%{cfg.buildcfg}/')
     end
 
-    filter 'configurations:debug'
+    filter('configurations:debug')
     do
-        files {
+        files({
             sheenbidi .. '/Source/BidiChain.c',
             sheenbidi .. '/Source/BidiTypeLookup.c',
             sheenbidi .. '/Source/BracketQueue.c',
@@ -48,106 +47,91 @@ do
             sheenbidi .. '/Source/SBScriptLocator.c',
             sheenbidi .. '/Source/ScriptLookup.c',
             sheenbidi .. '/Source/ScriptStack.c',
-            sheenbidi .. '/Source/StatusStack.c'
-        }
+            sheenbidi .. '/Source/StatusStack.c',
+        })
     end
-    filter 'configurations:release'
+    filter('configurations:release')
     do
-        files {
-            sheenbidi .. '/Source/SheenBidi.c'
-        }
+        files({ sheenbidi .. '/Source/SheenBidi.c' })
     end
 
-    buildoptions {
+    buildoptions({
         '-Wall',
         '-ansi',
         '-pedantic',
         '-Wno-unused-function',
         '-Wno-unused-variable',
-        '-DANSI_DECLARATORS'
-    }
+        '-DANSI_DECLARATORS',
+    })
 
-    buildoptions {
-        '-fno-exceptions',
-        '-fno-rtti',
-        '-fno-unwind-tables'
-    }
+    buildoptions({ '-fno-exceptions', '-fno-rtti', '-fno-unwind-tables' })
 
-    filter {'options:arch=wasm'}
+    filter({ 'options:arch=wasm' })
     do
-        buildoptions {
+        buildoptions({
             '-s STRICT=1',
             '-msimd128',
             '-s DISABLE_EXCEPTION_CATCHING=1',
             '-DEMSCRIPTEN_HAS_UNBOUND_TYPE_NAMES=0',
-            '--no-entry'
-        }
+            '--no-entry',
+        })
     end
 
-    filter 'configurations:debug'
+    filter('configurations:debug')
     do
-        defines {'DEBUG'}
-        symbols 'On'
+        defines({ 'DEBUG' })
+        symbols('On')
     end
 
-    filter 'configurations:release'
+    filter('configurations:release')
     do
-        defines {'RELEASE', 'NDEBUG', 'SB_CONFIG_UNITY'}
-        optimize 'On'
-        buildoptions {
-            '-Oz',
-            '-g0',
-            '-flto=full'
-        }
+        defines({ 'RELEASE', 'NDEBUG', 'SB_CONFIG_UNITY' })
+        optimize('On')
+        buildoptions({ '-Oz', '-g0', '-flto=full' })
 
-        linkoptions {
-            '-Oz',
-            '-g0',
-            '-flto=full'
-        }
+        linkoptions({ '-Oz', '-g0', '-flto=full' })
     end
-    filter {'system:macosx', 'options:arch=arm64'}
+    filter({ 'system:macosx', 'options:arch=arm64' })
     do
-        buildoptions {'-target arm64-apple-macos11'}
-        linkoptions {'-target arm64-apple-macos11'}
+        buildoptions({ '-target arm64-apple-macos11' })
+        linkoptions({ '-target arm64-apple-macos11' })
     end
-    filter {'system:macosx', 'options:arch=x86_64'}
+    filter({ 'system:macosx', 'options:arch=x86_64' })
     do
-        buildoptions {'-target x86_64-apple-macos10.12'}
-        linkoptions {'-target x86_64-apple-macos10.12'}
+        buildoptions({ '-target x86_64-apple-macos10.12' })
+        linkoptions({ '-target x86_64-apple-macos10.12' })
     end
 end
 
-project 'rive_text'
+project('rive_text')
 do
-    kind 'SharedLib'
-    language 'C++'
-    cppdialect 'C++11'
-    toolset 'clang'
+    kind('SharedLib')
+    language('C++')
+    cppdialect('C++11')
+    toolset('clang')
     targetdir('shared_lib/build/bin/%{cfg.buildcfg}')
     objdir('shared_lib/build/obj/%{cfg.buildcfg}')
 
-    dependson {
-        'rive_sheenbidi'
-    }
+    dependson({ 'rive_sheenbidi' })
 
-    defines {
+    defines({
         'WITH_RIVE_TEXT',
         'WITH_RIVE_AUDIO',
         'HAVE_OT',
         'HB_NO_FALLBACK_SHAPE',
-        'HB_NO_WIN1256'
-    }
+        'HB_NO_WIN1256',
+    })
 
-    includedirs {
+    includedirs({
         source .. '/include',
         source .. '/skia/renderer/include',
         harfbuzz .. '/src/',
         sheenbidi .. '/Headers',
-        miniaudio
-    }
+        miniaudio,
+        yoga,
+    })
 
-    files {
+    files({
         source .. '/src/audio/audio_engine.cpp',
         source .. '/src/audio/audio_source.cpp',
         source .. '/src/audio/audio_reader.cpp',
@@ -358,57 +342,49 @@ do
         harfbuzz .. '/src/hb-utf.hh',
         harfbuzz .. '/src/hb-vector.hh',
         harfbuzz .. '/src/hb.hh',
-        harfbuzz .. '/src/graph/gsubgpos-context.cc'
-    }
+        harfbuzz .. '/src/graph/gsubgpos-context.cc',
+        harfbuzz .. '/src/hb-paint.cc',
+        harfbuzz .. '/src/hb-paint-extents.cc',
+        harfbuzz .. '/src/hb-outline.cc',
+        harfbuzz .. '/src/hb-subset-instancer-solver.cc',
+        harfbuzz .. '/src/hb-face-builder.cc',
+        yoga .. '/yoga/**.cpp',
+    })
 
-    links {
-        'rive_sheenbidi'
-    }
+    defines({ 'YOGA_EXPORT=' })
 
-    buildoptions {
+    links({ 'rive_sheenbidi' })
+
+    buildoptions({
         '-fno-exceptions',
         '-fno-rtti',
         '-fno-unwind-tables',
-        '-DANSI_DECLARATORS'
-    }
+        '-DANSI_DECLARATORS',
+    })
 
-    filter {'not options:arch=wasm'}
+    filter({ 'not options:arch=wasm' })
     do
-        files {
-            'macos/rive_text/rive_text.cpp',
-            'macos/common.cpp'
-        }
+        files({ 'macos/rive_text/rive_text.cpp', 'macos/common.cpp' })
     end
 
-    filter {'options:arch=wasm'}
+    filter({ 'options:arch=wasm' })
     do
-        targetdir 'wasm/build/bin/%{cfg.buildcfg}/'
-        objdir 'wasm/build/obj/%{cfg.buildcfg}/'
-        kind 'ConsoleApp'
-        includedirs {
-            'taffy_ffi/src/'
-        }
-        files {
+        targetdir('wasm/build/bin/%{cfg.buildcfg}/')
+        objdir('wasm/build/obj/%{cfg.buildcfg}/')
+        kind('ConsoleApp')
+        files({
             'wasm/rive_text_bindings.cpp',
-            'wasm/rive_taffy_bindings.cpp',
-            'wasm/rive_audio_wasm_bindings.cpp'
-        }
-        defines {
-            'MA_NO_RUNTIME_LINKING'
-        }
-        buildoptions {
+            'wasm/layout_engine_wasm_bindings.cpp',
+            'wasm/rive_audio_wasm_bindings.cpp',
+        })
+        defines({ 'MA_NO_RUNTIME_LINKING' })
+        buildoptions({
             '-s STRICT=1',
             '-s DISABLE_EXCEPTION_CATCHING=1',
             '-DEMSCRIPTEN_HAS_UNBOUND_TYPE_NAMES=0',
-            '--no-entry'
-        }
-        libdirs {
-            'taffy_ffi/target/wasm32-unknown-emscripten/minimize'
-        }
-        links {
-            'taffy_ffi'
-        }
-        linkoptions {
+            '--no-entry',
+        })
+        linkoptions({
             '--closure=1',
             '-s WASM_BIGINT',
             '--closure-args="--externs ./wasm/js/externs.js"',
@@ -425,101 +401,85 @@ do
             '-s EXPORT_NAME="RiveText"',
             '-DEMSCRIPTEN_HAS_UNBOUND_TYPE_NAMES=0',
             '--no-entry',
-            '--pre-js ./wasm/js/rive_text.js'
-        }
+            '--pre-js ./wasm/js/rive_text.js',
+        })
     end
 
-    linkoptions {
-        '-fno-exceptions',
-        '-fno-rtti',
-        '-fno-unwind-tables'
-    }
+    linkoptions({ '-fno-exceptions', '-fno-rtti', '-fno-unwind-tables' })
 
-    filter {'options:arch=wasm', 'options:use_threads'}
+    filter({ 'options:arch=wasm', 'options:use_threads' })
     do
-        buildoptions {
-            '-pthread'
-        }
-        linkoptions {
-            '-pthread',
-            '-sPTHREAD_POOL_SIZE=6'
-        }
+        buildoptions({ '-pthread' })
+        linkoptions({ '-pthread', '-sPTHREAD_POOL_SIZE=6' })
     end
 
-    filter {'options:arch=wasm', 'options:single_file'}
+    filter({ 'options:arch=wasm', 'options:single_file' })
     do
-        linkoptions {
+        linkoptions({
             '-o %{cfg.targetdir}/rive_text_single.js',
-            '-s SINGLE_FILE=1'
-        }
+            '-s SINGLE_FILE=1',
+        })
     end
 
-    filter {'options:arch=wasm', 'options:not single_file'}
+    filter({ 'options:arch=wasm', 'options:not single_file' })
     do
-        linkoptions {
-            '-o %{cfg.targetdir}/rive_text.js'
-        }
+        linkoptions({ '-o %{cfg.targetdir}/rive_text.js' })
     end
 
-    filter 'configurations:debug'
+    filter('configurations:debug')
     do
-        defines {'DEBUG'}
-        symbols 'On'
+        defines({ 'DEBUG' })
+        symbols('On')
     end
 
-    filter {'configurations:debug', 'options:arch=wasm'}
+    filter({ 'configurations:debug', 'options:arch=wasm' })
     do
-        linkoptions {'-s ASSERTIONS=1'}
+        linkoptions({ '-s ASSERTIONS=1' })
     end
 
-    filter 'configurations:release'
+    filter('configurations:release')
     do
-        defines {'RELEASE'}
-        defines {'NDEBUG'}
-        optimize 'On'
+        defines({ 'RELEASE' })
+        defines({ 'NDEBUG' })
+        optimize('On')
 
-        buildoptions {
-            '-Oz',
-            '-g0',
-            '-flto=full'
-        }
+        buildoptions({ '-Oz', '-g0', '-flto=full' })
 
-        linkoptions {
-            '-Oz',
-            '-g0',
-            '-flto=full'
-        }
+        linkoptions({ '-Oz', '-g0', '-flto=full' })
     end
 
-    filter {'configurations:release', 'options:arch=wasm'}
+    filter({ 'configurations:release', 'options:arch=wasm' })
     do
-        linkoptions {'-s ASSERTIONS=0', '--closure-args="--externs ./wasm/js/externs_release.js"'}
+        linkoptions({
+            '-s ASSERTIONS=0',
+            '--closure-args="--externs ./wasm/js/externs_release.js"',
+        })
     end
 
-    filter {'system:macosx', 'options:arch=arm64'}
+    filter({ 'system:macosx', 'options:arch=arm64' })
     do
-        buildoptions {'-target arm64-apple-macos11'}
-        linkoptions {'-target arm64-apple-macos11'}
+        buildoptions({ '-target arm64-apple-macos11' })
+        linkoptions({ '-target arm64-apple-macos11' })
     end
-    filter {'system:macosx', 'options:arch=x86_64'}
+    filter({ 'system:macosx', 'options:arch=x86_64' })
     do
-        buildoptions {'-target x86_64-apple-macos10.12'}
-        linkoptions {'-target x86_64-apple-macos10.12'}
+        buildoptions({ '-target x86_64-apple-macos10.12' })
+        linkoptions({ '-target x86_64-apple-macos10.12' })
     end
 end
 
-newoption {
+newoption({
     trigger = 'single_file',
-    description = 'Set when the wasm should be packed in with the js code.'
-}
+    description = 'Set when the wasm should be packed in with the js code.',
+})
 
-newoption {
+newoption({
     trigger = 'use_threads',
-    description = 'Whether to use threads for audio decoding.'
-}
+    description = 'Whether to use threads for audio decoding.',
+})
 
-newoption {
+newoption({
     trigger = 'arch',
     description = 'Architectures we can target',
-    allowed = {{'x86_64'}, {'arm64'}, {'wasm'}}
-}
+    allowed = { { 'x86_64' }, { 'arm64' }, { 'wasm' } },
+})

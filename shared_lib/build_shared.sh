@@ -39,8 +39,6 @@ if [[ ! -f "bin/premake5" ]]; then
     popd
 fi
 
-sh ./build_taffy.sh
-
 export PREMAKE=bin/premake5
 
 ARCH=x86_64

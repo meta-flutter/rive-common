@@ -7,8 +7,8 @@ import 'dart:typed_data';
 
 import 'package:rive_common/math.dart';
 import 'package:rive_common/rive_text.dart';
+import 'package:rive_common/src/layout_engine_wasm.dart';
 import 'package:rive_common/src/rive_audio_wasm.dart';
-import 'package:rive_common/src/rive_taffy_wasm.dart';
 import 'package:rive_common/src/rive_text_wasm_version.dart';
 import 'package:rive_common/utilities.dart';
 
@@ -662,7 +662,7 @@ Future<void> initFont() async {
       'LOCAL_RIVE_FLUTTER_WASM',
       defaultValue: false,
     )
-        ? 'http://localhost:8282/release/rive_text.js'
+        ? 'http://localhost:8282/debug/rive_text.js'
         : 'https://cdn.jsdelivr.net/npm/@rive-app/flutter-wasm@$wasmVersion/build/bin/release/rive_text.js'
     ..type = 'application/javascript'
     ..defer = true;
@@ -696,8 +696,8 @@ Future<void> initFont() async {
         _fontAscent = module['fontAscent'] as js.JsFunction;
         _fontDescent = module['fontDescent'] as js.JsFunction;
 
-        TaffyWasm.init(module);
         AudioEngineWasm.initWasmModule(module);
+        LayoutEngineWasm.initWasmModule(module);
 
         completer.complete();
       }

@@ -1,5 +1,5 @@
 name: rive_common
-version: 0.3.0
+version: 0.3.2
 homepage: https://rive.app
 description: Share Rive functionality between the editor and the Flutter runtime.
 repository: https://github.com/rive-app/rive-flutter
@@ -36,3 +36,5 @@ flutter:
       web:
         pluginClass: RivePlugin
         fileName: rive_web.dart
+      linux:
+        pluginClass: RivePlugin

@@ -57,7 +57,7 @@ function installRiveCpp {
     if [ $FORCE == "true" ] || [ ! -d harfbuzz ]; then
         rm -fR harfbuzz
         echo "Cloning Harfbuzz."
-        git clone --depth 1 --branch "6.0.0" https://github.com/harfbuzz/harfbuzz.git
+        git clone --depth 1 --branch "rive_8.3.0" https://github.com/rive-app/harfbuzz.git
     fi
     if [ $FORCE == "true" ] || [ ! -d SheenBidi ]; then
         rm -fR SheenBidi
@@ -67,12 +67,12 @@ function installRiveCpp {
     if [ $FORCE == "true" ] || [ ! -d miniaudio ]; then
         rm -fR miniaudio
         echo "Cloning miniaudio."
-        git clone --depth 1 --branch "rive" https://github.com/rive-app/miniaudio.git
+        git clone --depth 1 --branch "rive_changes" https://github.com/rive-app/miniaudio.git
     fi
-
-    if [ $FORCE == "true" ]; then
-        echo "Installing rustup"
-        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+    if [ $FORCE == "true" ] || [ ! -d yoga ]; then
+        rm -fR yoga
+        echo "Cloning yoga."
+        git clone --depth 1 --branch "rive_changes_v2_0_1" https://github.com/rive-app/yoga.git
     fi
 }
 

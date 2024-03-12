@@ -79,34 +79,37 @@ Rive 2 Flutter Runtime. This package provides runtime functionality for playing 
     "harfbuzz/src/hb-ucd.cc",
     "harfbuzz/src/hb-unicode.cc",
     "harfbuzz/src/graph/gsubgpos-context.cc",
+    "harfbuzz/src/hb-paint.cc",
+    "harfbuzz/src/hb-paint-extents.cc",
+    "harfbuzz/src/hb-outline.cc",
+    "harfbuzz/src/hb-subset-instancer-solver.cc",
+    "harfbuzz/src/hb-face-builder.cc",
 
     "SheenBidi/Headers/*.h",
     "SheenBidi/Source/SheenBidi.c",
 
-    "taffy/taffy.h",
+    "yoga/yoga/Utils.cpp",
+    "yoga/yoga/YGConfig.cpp",
+    "yoga/yoga/YGLayout.cpp",
+    "yoga/yoga/YGEnums.cpp",
+    "yoga/yoga/YGNodePrint.cpp",
+    "yoga/yoga/YGNode.cpp",
+    "yoga/yoga/YGValue.cpp",
+    "yoga/yoga/YGStyle.cpp",
+    "yoga/yoga/Yoga.cpp",
+    "yoga/yoga/event/event.cpp",
+    "yoga/yoga/log.cpp",
   ]
   s.dependency "FlutterMacOS"
-
-  s.script_phase = {
-    :name => 'Build Taffy library',
-    :script => 'sh "$PODS_TARGET_SRCROOT/../cargokit/build_pod.sh" ../taffy_ffi taffy_ffi',
-    :execution_position => :before_compile,
-    :input_files => ['${BUILT_PRODUCTS_DIR}/cargokit_phony'],
-    # Let XCode know that the static library referenced in -force_load below is
-    # created by this build step.
-    :output_files => ["${BUILT_PRODUCTS_DIR}/libtaffy_ffi.a"],
-  }
 
   s.platform = :osx, "10.11"
   s.pod_target_xcconfig = {
     "DEFINES_MODULE" => "YES",
-    'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'i386',
-    "OTHER_LDFLAGS" => "-force_load ${BUILT_PRODUCTS_DIR}/libtaffy_ffi.a",
-    "LIBRARY_SEARCH_PATHS" => "$(PODS_TARGET_SRCROOT)/taffy",
-    "OTHER_CFLAGS" => "-DSB_CONFIG_UNITY -DWITH_RIVE_TEXT -DWITH_RIVE_AUDIO -DHAVE_OT -DHB_NO_FALLBACK_SHAPE -DHB_NO_WIN1256 -Wno-documentation -Wno-comma -Wno-unreachable-code  -Wno-shorten-64-to-32",
-    "OTHER_CPLUSPLUSFLAGS" => "-DWITH_RIVE_TEXT -DWITH_RIVE_AUDIO -DHAVE_OT -DHB_NO_FALLBACK_SHAPE -DHB_NO_WIN1256 -Wno-conditional-uninitialized -Wno-documentation -Wno-comma -Wno-unreachable-code -Wno-shorten-64-to-32 -std=c++11",
+    "OTHER_CFLAGS" => "-DYOGA_EXPORT= -DSB_CONFIG_UNITY -DWITH_RIVE_TEXT -DWITH_RIVE_AUDIO -DHAVE_OT -DHB_NO_FALLBACK_SHAPE -DHB_NO_WIN1256 -Wno-documentation -Wno-comma -Wno-unreachable-code  -Wno-shorten-64-to-32",
+    "OTHER_CPLUSPLUSFLAGS" => "-DYOGA_EXPORT= -DWITH_RIVE_TEXT -DWITH_RIVE_AUDIO -DHAVE_OT -DHB_NO_FALLBACK_SHAPE -DHB_NO_WIN1256 -Wno-conditional-uninitialized -Wno-documentation -Wno-comma -Wno-unreachable-code -Wno-shorten-64-to-32 -std=c++11",
     "USER_HEADER_SEARCH_PATHS" => '"$(PODS_TARGET_SRCROOT)/miniaudio" "$(PODS_TARGET_SRCROOT)/SheenBidi/Headers" "$(PODS_TARGET_SRCROOT)/harfbuzz/src" "$(PODS_TARGET_SRCROOT)/rive-cpp/include" "$(PODS_TARGET_SRCROOT)/rive-cpp/skia/renderer/include"',
-    "OTHER_CPLUSPLUSFLAGS[config=Release]" => "-DNDEBUG -DWITH_RIVE_TEXT -DWITH_RIVE_AUDIO -DHAVE_OT -DHB_NO_FALLBACK_SHAPE -DHB_NO_WIN1256 -Wno-conditional-uninitialized -Wno-documentation -Wno-comma -Wno-unreachable-code -Wno-shorten-64-to-32 -std=c++11",
+    "HEADER_SEARCH_PATHS" => '"$(PODS_TARGET_SRCROOT)/yoga"',
+    "OTHER_CPLUSPLUSFLAGS[config=Release]" => "-DNDEBUG -DYOGA_EXPORT= -DWITH_RIVE_TEXT -DWITH_RIVE_AUDIO -DHAVE_OT -DHB_NO_FALLBACK_SHAPE -DHB_NO_WIN1256 -Wno-conditional-uninitialized -Wno-documentation -Wno-comma -Wno-unreachable-code -Wno-shorten-64-to-32 -std=c++11",
     "CLANG_CXX_LANGUAGE_STANDARD" => "c++11",
     "CLANG_CXX_LIBRARY" => "libc++",
   }

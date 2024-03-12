@@ -272,6 +272,7 @@ StatusCode Artboard::initialize()
 
 void Artboard::sortDrawOrder()
 {
+    m_HasChangedDrawOrderInLastUpdate = true;
     for (auto target : m_DrawTargets)
     {
         target->first = target->last = nullptr;
@@ -377,10 +378,6 @@ void Artboard::addObject(Core* object) { m_Objects.push_back(object); }
 void Artboard::addAnimation(LinearAnimation* object) { m_Animations.push_back(object); }
 
 void Artboard::addStateMachine(StateMachine* object) { m_StateMachines.push_back(object); }
-
-void Artboard::addTextValueRun(TextValueRun* object) { m_TextValueRuns.push_back(object); }
-
-void Artboard::addEvent(Event* object) { m_Events.push_back(object); }
 
 Core* Artboard::resolve(uint32_t id) const
 {
@@ -490,6 +487,7 @@ bool Artboard::updateComponents()
 
 bool Artboard::advance(double elapsedSeconds)
 {
+    m_HasChangedDrawOrderInLastUpdate = false;
     if (m_JoysticksApplyBeforeUpdate)
     {
         for (auto joystick : m_Joysticks)
@@ -727,24 +725,6 @@ int Artboard::defaultStateMachineIndex() const
     return index;
 }
 
-TextValueRun* Artboard::textValueRunAt(size_t index) const
-{
-    if (index >= m_TextValueRuns.size())
-    {
-        return nullptr;
-    }
-    return m_TextValueRuns[index];
-}
-
-Event* Artboard::eventAt(size_t index) const
-{
-    if (index >= m_Events.size())
-    {
-        return nullptr;
-    }
-    return m_Events[index];
-}
-
 // std::unique_ptr<ArtboardInstance> Artboard::instance() const
 // {
 //     std::unique_ptr<ArtboardInstance> artboardClone(new ArtboardInstance);
@@ -868,3 +848,19 @@ std::unique_ptr<Scene> ArtboardInstance::defaultScene()
     }
     return scene;
 }
+
+#ifdef EXTERNAL_RIVE_AUDIO_ENGINE
+rcp<AudioEngine> Artboard::audioEngine() const { return m_audioEngine; }
+void Artboard::audioEngine(rcp<AudioEngine> audioEngine)
+{
+    m_audioEngine = audioEngine;
+    for (auto nestedArtboard : m_NestedArtboards)
+    {
+        auto artboard = nestedArtboard->artboard();
+        if (artboard != nullptr)
+        {
+            artboard->audioEngine(audioEngine);
+        }
+    }
+}
+#endif

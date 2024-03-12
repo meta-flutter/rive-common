@@ -1,108 +1,42 @@
--- require "lfs"
--- Clean Function --
-newaction {
-    trigger = 'clean',
-    description = 'clean the build',
-    execute = function()
-        print('clean the build...')
-        os.rmdir('build')
-        os.remove('Makefile')
-        -- no wildcards in os.remove, so use shell
-        os.execute('rm *.make')
-        print('build cleaned')
-    end
-}
+dofile('rive_build_config.lua')
 
-workspace 'rive'
-configurations {'debug'}
+defines({
+    'TESTING',
+    'ENABLE_QUERY_FLAT_VERTICES',
+    'WITH_RIVE_TOOLS',
+    'WITH_RIVE_TEXT',
+    'WITH_RIVE_AUDIO',
+})
 
-dofile(path.join(path.getabsolute('../../dependencies/'), 'premake5_harfbuzz.lua'))
-dofile(path.join(path.getabsolute('../../dependencies/'), 'premake5_sheenbidi.lua'))
-dofile(path.join(path.getabsolute('../../dependencies/'), 'premake5_miniaudio.lua'))
+dofile(path.join(path.getabsolute('../../'), 'premake5_v2.lua'))
 
 project('tests')
 do
-    kind 'ConsoleApp'
-    language 'C++'
-    cppdialect 'C++11'
-    targetdir 'build/bin/%{cfg.buildcfg}'
-    objdir 'build/obj/%{cfg.buildcfg}'
-    flags {'FatalWarnings'}
-    buildoptions {'-Wall', '-fno-exceptions', '-fno-rtti'}
-    exceptionhandling 'On'
+    kind('ConsoleApp')
+    exceptionhandling('On')
 
-    includedirs {
+    includedirs({
         './include',
         '../../include',
-        harfbuzz .. '/src',
-        sheenbidi .. '/Headers',
-        miniaudio
-    }
-    links {
-        'rive_harfbuzz',
-        'rive_sheenbidi'
-    }
+        miniaudio,
+    })
 
-    files {
-        '../../src/**.cpp', -- the Rive runtime source
+    links({ 'rive', 'rive_harfbuzz', 'rive_sheenbidi' })
+
+    files({
         '../../test/**.cpp', -- the tests
-        '../../utils/**.cpp' -- no_op utils
-    }
+        '../../utils/**.cpp', -- no_op utils
+    })
 
-    defines {'TESTING', 'ENABLE_QUERY_FLAT_VERTICES', 'WITH_RIVE_TOOLS', 'WITH_RIVE_TEXT', 'WITH_RIVE_AUDIO'}
-
-    filter {'system:windows', 'files:../../src/audio/audio_engine.cpp'}
+    filter('system:linux')
     do
-        -- Too many warnings from miniaudio.h
-        removeflags {'FatalCompileWarnings'}
-        removebuildoptions {'-Wall'}
+        links({ 'dl', 'pthread' })
     end
-
-    filter {'system:windows', 'toolset:clang'}
+    filter({ 'options:not no-harfbuzz-renames' })
     do
-        -- Too many warnings from miniaudio.h
-        buildoptions {
-            '-Wno-nonportable-system-include-path',
-            '-Wno-zero-as-null-pointer-constant',
-            '-Wno-missing-prototypes',
-            '-Wno-cast-qual',
-            '-Wno-format-nonliteral',
-            '-Wno-cast-align',
-            '-Wno-covered-switch-default',
-            '-Wno-comma',
-            '-Wno-tautological-type-limit-compare',
-            '-Wno-extra-semi-stmt',
-            '-Wno-tautological-constant-out-of-range-compare',
-            '-Wno-implicit-fallthrough',
-            '-Wno-implicit-int-conversion',
-            '-Wno-undef'
-        }
-    end
-
-    filter 'configurations:debug'
-    do
-        defines {'DEBUG'}
-        symbols 'On'
-    end
-
-    filter 'system:linux'
-    do
-        defines {'EXTERNAL_RIVE_AUDIO_ENGINE'}
-        links {'dl', 'pthread'}
-    end
-
-    filter 'system:windows'
-    do
-        removebuildoptions {
-            -- vs clang doesn't recognize these on windows
-            '-fno-exceptions',
-            '-fno-rtti'
-        }
-        architecture 'x64'
-        defines {
-            '_USE_MATH_DEFINES',
-            '_CRT_SECURE_NO_WARNINGS',
-            '_CRT_NONSTDC_NO_DEPRECATE'
-        }
+        includedirs({
+            dependencies,
+        })
+        forceincludes({ 'rive_harfbuzz_renames.h' })
     end
 end

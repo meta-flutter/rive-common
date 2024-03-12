@@ -1,3 +1,7 @@
+## 0.3.2
+
+- Remove Taffy dependency
+
 ## 0.3.0
 
 - Audio Engine for Rive in FFI and WASM.

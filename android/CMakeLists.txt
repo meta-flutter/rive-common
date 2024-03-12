@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.4.1) # for example
 
 set(CMAKE_CXX_FLAGS
-    "${CMAKE_CXX_FLAGS} -DWITH_RIVE_TEXT -DWITH_RIVE_AUDIO -DHAVE_OT -DHB_NO_FALLBACK_SHAPE -DHB_NO_WIN1256 -std=c++11"
+    "${CMAKE_CXX_FLAGS} -DWITH_RIVE_TEXT -DWITH_RIVE_AUDIO -DHAVE_OT -DHB_NO_FALLBACK_SHAPE -DHB_NO_WIN1256 -DHB_NO_EXTERN_HELPERS  -DYOGA_EXPORT= -std=c++11"
 )
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DSB_CONFIG_UNITY")
@@ -17,6 +17,10 @@ add_library(
   ../ios/rive-cpp/src/renderer.cpp
   ../ios/rive-cpp/src/text/font_hb.cpp
   ../ios/rive-cpp/src/text/line_breaker.cpp
+  ../ios/rive-cpp/src/audio/audio_engine.cpp
+  ../ios/rive-cpp/src/audio/audio_source.cpp
+  ../ios/rive-cpp/src/audio/audio_sound.cpp
+  ../ios/rive-cpp/src/audio/audio_reader.cpp
   ../ios/harfbuzz/src/hb-aat-layout.cc
   ../ios/harfbuzz/src/hb-aat-map.cc
   ../ios/harfbuzz/src/hb-blob.cc
@@ -72,8 +76,27 @@ add_library(
   ../ios/harfbuzz/src/hb-ucd.cc
   ../ios/harfbuzz/src/hb-unicode.cc
   ../ios/harfbuzz/src/graph/gsubgpos-context.cc
-  ../ios/SheenBidi/Source/SheenBidi.c)
+  ../ios/harfbuzz/src/hb-paint.cc
+  ../ios/harfbuzz/src/hb-paint-extents.cc
+  ../ios/harfbuzz/src/hb-outline.cc
+  ../ios/harfbuzz/src/hb-subset-instancer-solver.cc
+  ../ios/harfbuzz/src/hb-face-builder.cc
+  ../ios/SheenBidi/Source/SheenBidi.c
+  ../ios/common.cpp
+  ../ios/yoga/yoga/Utils.cpp
+  ../ios/yoga/yoga/YGConfig.cpp
+  ../ios/yoga/yoga/YGLayout.cpp
+  ../ios/yoga/yoga/YGEnums.cpp
+  ../ios/yoga/yoga/YGNodePrint.cpp
+  ../ios/yoga/yoga/YGNode.cpp
+  ../ios/yoga/yoga/YGValue.cpp
+  ../ios/yoga/yoga/YGStyle.cpp
+  ../ios/yoga/yoga/Yoga.cpp
+  ../ios/yoga/yoga/event/event.cpp
+  ../ios/yoga/yoga/log.cpp)
 
 target_include_directories(
   rive_text PRIVATE ../ios/harfbuzz/src ../ios/rive-cpp/skia/renderer/include
-                    ../ios/rive-cpp/include ../ios/SheenBidi/Headers)
+                    ../ios/rive-cpp/include ../ios/SheenBidi/Headers ../ios/miniaudio ../ios/yoga)
+target_link_libraries(rive_text -llog)
+

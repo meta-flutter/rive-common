@@ -50,10 +50,6 @@ source ./get_emcc.sh
 
 export PREMAKE=bin/premake5
 
-pushd ../taffy_ffi
-RUSTFLAGS="-Clinker-plugin-lto --emit=llvm-ir" $HOME/.cargo/bin/cargo build -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort --target wasm32-unknown-emscripten --profile minimize
-popd
-
 $PREMAKE --scripts=../macos/rive-cpp/build --file=../premake5_rive_plugin.lua gmake2 $SINGLE $THREADS --arch=wasm
 
 cd ..

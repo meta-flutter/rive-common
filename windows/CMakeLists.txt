@@ -14,7 +14,7 @@ project(${PROJECT_NAME} LANGUAGES CXX C)
 set(PLUGIN_NAME "rive_common_plugin")
 
 set(CMAKE_CXX_FLAGS
-    "${CMAKE_CXX_FLAGS} -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-undef -Wno-unsafe-buffer-usage -Wno-deprecated-copy-with-user-provided-dtor -Wno-documentation -Wno-documentation-pedantic -Wno-documentation-unknown-command -Wno-double-promotion -Wno-exit-time-destructors -Wno-float-equal -Wno-global-constructors -Wno-implicit-float-conversion -Wno-newline-eof -Wno-old-style-cast -Wno-reserved-identifier -Wno-shadow -Wno-sign-compare -Wno-sign-conversion -Wno-unused-function -Wno-unused-macros -Wno-unused-variable -Wno-unused-parameter -Wno-switch-enum -Wno-missing-field-initializers -DWITH_RIVE_TEXT -DWITH_RIVE_AUDIO -DHAVE_OT  -DHB_NO_FALLBACK_SHAPE  -DHB_NO_WIN1256 -DSB_CONFIG_UNITY -Wno-tautological-constant-out-of-range-compare -D_CRT_SECURE_NO_WARNINGS"
+    "${CMAKE_CXX_FLAGS} -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-undef -Wno-unsafe-buffer-usage -Wno-deprecated-copy-with-user-provided-dtor -Wno-documentation -Wno-documentation-pedantic -Wno-documentation-unknown-command -Wno-double-promotion -Wno-exit-time-destructors -Wno-float-equal -Wno-global-constructors -Wno-implicit-float-conversion -Wno-newline-eof -Wno-old-style-cast -Wno-reserved-identifier -Wno-shadow -Wno-sign-compare -Wno-sign-conversion -Wno-unused-function -Wno-unused-macros -Wno-unused-variable -Wno-unused-parameter -Wno-switch-enum -Wno-missing-field-initializers -DWITH_RIVE_TEXT -DWITH_RIVE_AUDIO -DHAVE_OT  -DHB_NO_FALLBACK_SHAPE  -DHB_NO_WIN1256  -DHB_NO_EXTERN_HELPERS -DSB_CONFIG_UNITY -Wno-tautological-constant-out-of-range-compare -D_CRT_SECURE_NO_WARNINGS -DYOGA_EXPORT="
 )
 
 set(CMAKE_C_FLAGS
@@ -90,8 +90,24 @@ list(
   ../ios/harfbuzz/src/hb-ucd.cc
   ../ios/harfbuzz/src/hb-unicode.cc
   ../ios/harfbuzz/src/graph/gsubgpos-context.cc
+  ../ios/harfbuzz/src/hb-paint.cc
+  ../ios/harfbuzz/src/hb-paint-extents.cc
+  ../ios/harfbuzz/src/hb-outline.cc
+  ../ios/harfbuzz/src/hb-subset-instancer-solver.cc
+  ../ios/harfbuzz/src/hb-face-builder.cc
   ../ios/SheenBidi/Source/SheenBidi.c
-  ../ios/common.cpp)
+  ../ios/common.cpp
+  ../ios/yoga/yoga/Utils.cpp
+  ../ios/yoga/yoga/YGConfig.cpp
+  ../ios/yoga/yoga/YGLayout.cpp
+  ../ios/yoga/yoga/YGEnums.cpp
+  ../ios/yoga/yoga/YGNodePrint.cpp
+  ../ios/yoga/yoga/YGNode.cpp
+  ../ios/yoga/yoga/YGValue.cpp
+  ../ios/yoga/yoga/YGStyle.cpp
+  ../ios/yoga/yoga/Yoga.cpp
+  ../ios/yoga/yoga/event/event.cpp
+  ../ios/yoga/yoga/log.cpp)
 
 # Define the plugin library target. Its name must not be changed (see comment on
 # PLUGIN_NAME above).
@@ -115,20 +131,6 @@ target_include_directories(
   ${PLUGIN_NAME}
   INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include"
   PRIVATE ../ios/harfbuzz/src ../ios/rive-cpp/skia/renderer/include
-          ../ios/rive-cpp/include ../ios/SheenBidi/Headers ../ios/miniaudio)
-target_link_libraries(${PLUGIN_NAME} PRIVATE flutter flutter_wrapper_plugin)
+          ../ios/rive-cpp/include ../ios/SheenBidi/Headers ../ios/miniaudio ../ios/yoga)
+target_link_libraries(${PLUGIN_NAME} PRIVATE flutter flutter_wrapper_plugin ws2_32 bcrypt ntdll kernel32 advapi32 userenv)
 target_compile_features(${PLUGIN_NAME} PRIVATE cxx_std_11)
-# List of absolute paths to libraries that should be bundled with the plugin.
-# This list could contain prebuilt libraries, or libraries created by an
-# external build triggered from this build file.
-set(rive_bundled_libraries
-    ""
-    PARENT_SCOPE)
-
-include("../cargokit/cmake/cargokit.cmake")
-apply_cargokit(${PROJECT_NAME} ../taffy_ffi taffy_ffi "")
-
-set(taffy_ffi_bundled_libraries
-  "${${PROJECT_NAME}_cargokit_lib}"
-  PARENT_SCOPE
-)

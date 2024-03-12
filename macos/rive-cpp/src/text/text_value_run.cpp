@@ -7,7 +7,11 @@
 
 using namespace rive;
 
-void TextValueRun::textChanged() { parent()->as<Text>()->markShapeDirty(); }
+void TextValueRun::textChanged()
+{
+    m_length = -1;
+    parent()->as<Text>()->markShapeDirty();
+}
 
 StatusCode TextValueRun::onAddedClean(CoreContext* context)
 {
@@ -44,17 +48,6 @@ StatusCode TextValueRun::onAddedDirty(CoreContext* context)
     return StatusCode::Ok;
 }
 
-StatusCode TextValueRun::import(ImportStack& importStack)
-{
-    auto artboardImporter = importStack.latest<ArtboardImporter>(ArtboardBase::typeKey);
-    if (artboardImporter == nullptr)
-    {
-        return StatusCode::MissingObject;
-    }
-    artboardImporter->addTextValueRun(this);
-    return Super::import(importStack);
-}
-
 void TextValueRun::styleIdChanged()
 {
     auto coreObject = artboard()->resolve(styleId());
@@ -71,13 +64,13 @@ uint32_t TextValueRun::offset() const
     Text* text = parent()->as<Text>();
     uint32_t offset = 0;
 
-    for (const TextValueRun* run : text->runs())
+    for (TextValueRun* run : text->runs())
     {
         if (run == this)
         {
             break;
         }
-        offset += (uint32_t)run->text().size();
+        offset += run->length();
     }
     return offset;
 #else
