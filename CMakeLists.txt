@@ -37,13 +37,17 @@ set(CMAKE_VISIBILITY_INLINES_HIDDEN ON)
 
 string(APPEND CMAKE_C_FLAGS " -Wall -ansi -pedantic -Wno-unused-function -Wno-unused-variable")
 string(APPEND CMAKE_C_FLAGS " -fno-exceptions -fno-rtti -fno-unwind-tables")
-string(APPEND CMAKE_C_FLAGS " -flto=full")
-string(APPEND CMAKE_C_LINKER_FLAGS " -flto=full")
 
 string(APPEND CMAKE_CXX_FLAGS " -fno-exceptions -fno-rtti -fno-unwind-tables")
-string(APPEND CMAKE_CXX_FLAGS " -flto=full")
 string(APPEND CMAKE_CXX_LINKER_FLAGS " -fno-exceptions -fno-rtti -fno-unwind-tables")
-string(APPEND CMAKE_CXX_LINKER_FLAGS " -flto=full")
+
+OPTION(ENABLE_LTO "Enables Link Time Optimization" ON)
+if (ENABLE_LTO)
+    string(APPEND CMAKE_C_FLAGS " -flto=full")
+    string(APPEND CMAKE_C_LINKER_FLAGS " -flto=full")
+    string(APPEND CMAKE_CXX_FLAGS " -flto=full")
+    string(APPEND CMAKE_CXX_LINKER_FLAGS " -flto=full")
+endif()
 
 add_library(rive_sheenbidi STATIC
     third_party/sheenbidi/Source/BidiChain.c
