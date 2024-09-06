@@ -1,43 +1,56 @@
 import 'dart:async';
-import 'dart:js' as js;
+import 'dart:js_interop' as js;
+import 'dart:js_interop_unsafe';
 import 'dart:typed_data';
 
 import 'package:rive_common/rive_audio.dart';
 
-late js.JsFunction _makeAudioEngine;
-late js.JsFunction _engineTime;
-late js.JsFunction _numChannels;
-late js.JsFunction _sampleRate;
-late js.JsFunction _unrefAudioEngine;
-late js.JsFunction _makeAudioSourceBuffer;
-late js.JsFunction _simpleArrayData;
-late js.JsFunction _makeAudioSource;
-late js.JsFunction _makeAudioReader;
-late js.JsFunction _audioReaderRead;
-late js.JsFunction _unrefAudioSource;
-late js.JsFunction _unrefAudioReader;
-late js.JsFunction _playAudioSource;
-late js.JsFunction _audioSourceNumChannels;
-late js.JsFunction _audioSourceSampleRate;
-late js.JsFunction _audioSourceFormat;
-late js.JsFunction _unrefAudioSound;
-late js.JsFunction _stopAudioSound;
-late js.JsFunction _makeBufferedAudioSource;
-late js.JsFunction _bufferedAudioSamples;
+late js.JSFunction _makeAudioEngine;
+late js.JSFunction _engineTime;
+late js.JSFunction _numChannels;
+late js.JSFunction _sampleRate;
+late js.JSFunction _unrefAudioEngine;
+late js.JSFunction _makeAudioSourceBuffer;
+late js.JSFunction _simpleArrayData;
+late js.JSFunction _makeAudioSource;
+late js.JSFunction _makeAudioReader;
+late js.JSFunction _audioReaderRead;
+late js.JSFunction _unrefAudioSource;
+late js.JSFunction _unrefAudioReader;
+late js.JSFunction _playAudioSource;
+late js.JSFunction _audioSourceNumChannels;
+late js.JSFunction _audioSourceSampleRate;
+late js.JSFunction _audioSourceFormat;
+late js.JSFunction _unrefAudioSound;
+late js.JSFunction _stopAudioSound;
+late js.JSFunction _getSoundVolume;
+late js.JSFunction _getSoundCompleted;
+late js.JSFunction _setSoundVolume;
+late js.JSFunction _engineInitLevelMonitor;
+late js.JSFunction _engineLevel;
+late js.JSFunction _makeBufferedAudioSource;
+late js.JSFunction _bufferedAudioSamples;
+late js.JSFunction _heapViewU8;
+late js.JSFunction _heapViewF32;
 
 mixin AudioSourceWasm {
   int get nativePtr;
   set nativePtr(int value);
   int get sampleRate =>
-      _audioSourceSampleRate.apply(<dynamic>[nativePtr]) as int;
+      (_audioSourceSampleRate.callAsFunction(null, nativePtr.toJS)
+              as js.JSNumber)
+          .toDartInt;
   int get channels =>
-      _audioSourceNumChannels.apply(<dynamic>[nativePtr]) as int;
+      (_audioSourceNumChannels.callAsFunction(null, nativePtr.toJS)
+              as js.JSNumber)
+          .toDartInt;
 
-  AudioFormat get format =>
-      AudioFormat.values[_audioSourceFormat.apply(<dynamic>[nativePtr]) as int];
+  AudioFormat get format => AudioFormat.values[
+      (_audioSourceFormat.callAsFunction(null, nativePtr.toJS) as js.JSNumber)
+          .toDartInt];
 
   void dispose() {
-    _unrefAudioSource.apply(<dynamic>[nativePtr]);
+    _unrefAudioSource.callAsFunction(null, nativePtr.toJS);
     nativePtr = 0;
   }
 }
@@ -72,36 +85,40 @@ class StreamingAudioSourceWasm extends StreamingAudioSource
 
   @override
   Future<BufferedAudioSource> makeBuffered({int? channels, int? sampleRate}) {
-    var decodeWorkPtr = _makeAudioReader.apply(<dynamic>[
-      nativePtr,
-      channels ?? this.channels,
-      sampleRate ?? this.sampleRate,
-    ]) as int;
+    var decodeWorkPtr = (_makeAudioReader.callAsFunction(
+      null,
+      nativePtr.toJS,
+      (channels ?? this.channels).toJS,
+      (sampleRate ?? this.sampleRate).toJS,
+    ) as js.JSNumber)
+        .toDartInt;
     final completer = Completer<BufferedAudioSource>();
     Timer.periodic(
       const Duration(milliseconds: 10),
       (timer) {
-        var obj =
-            _audioReaderRead.apply(<dynamic>[decodeWorkPtr]) as js.JsObject;
-        var data = obj['data'] as int;
+        var obj = _audioReaderRead.callAsFunction(null, decodeWorkPtr.toJS)
+            as js.JSObject;
+        var data = (obj['data'] as js.JSNumber).toDartInt;
 
         if (data != 0) {
           assert(data % 4 == 0);
           timer.cancel();
 
-          var nativeBufferedSource = _makeBufferedAudioSource.apply(<dynamic>[
-            decodeWorkPtr,
-            channels ?? this.channels,
-            sampleRate ?? this.sampleRate,
-          ]) as int;
+          var nativeBufferedSource = (_makeBufferedAudioSource.callAsFunction(
+            null,
+            decodeWorkPtr.toJS,
+            (channels ?? this.channels).toJS,
+            (sampleRate ?? this.sampleRate).toJS,
+          ) as js.JSNumber)
+              .toDartInt;
 
           // Decode worker can be nuked now.
-          _unrefAudioReader.apply(<dynamic>[decodeWorkPtr]);
+          _unrefAudioReader.callAsFunction(null, decodeWorkPtr.toJS);
 
-          var samplesSpan = _bufferedAudioSamples
-              .apply(<dynamic>[nativeBufferedSource]) as js.JsObject;
-          var samplesData = samplesSpan['data'] as int;
-          var samplesCount = samplesSpan['count'] as int;
+          var samplesSpan = _bufferedAudioSamples.callAsFunction(
+              null, nativeBufferedSource.toJS) as js.JSObject;
+          var samplesData = (samplesSpan['data'] as js.JSNumber).toDartInt;
+          var samplesCount = (samplesSpan['count'] as js.JSNumber).toDartInt;
           assert(samplesData % 4 == 0);
           completer.complete(
             BufferedAudioSourceWasm(
@@ -115,39 +132,6 @@ class StreamingAudioSourceWasm extends StreamingAudioSource
     );
     return completer.future;
   }
-
-  // @override
-  // Future<AudioReader> makeReader({int? sampleRate, int? channels}) {
-  //   var decodeWorkPtr = _makeAudioReader.apply(<dynamic>[
-  //     nativePtr,
-  //     channels ?? this.channels,
-  //     sampleRate ?? this.sampleRate
-  //   ]) as int;
-  //   final completer = Completer<AudioReader>();
-  //   Timer.periodic(
-  //     const Duration(milliseconds: 10),
-  //     (timer) {
-  //       var obj =
-  //           _audioReaderRead.apply(<dynamic>[decodeWorkPtr]) as js.JsObject;
-  //       var data = obj['data'] as int;
-  //       var dataCount = obj['count'] as int;
-
-  //       if (data != 0) {
-  //         assert(data % 4 == 0);
-
-  //         timer.cancel();
-  //         completer.complete(
-  //           AudioReaderWasm(
-  //             decodeWorkPtr,
-  //             this,
-  //             AudioEngineWasm.wasmHeapFloat32(data ~/ 4, dataCount),
-  //           ),
-  //         );
-  //       }
-  //     },
-  //   );
-  //   return completer.future;
-  // }
 }
 
 class AudioSoundWasm extends AudioSound {
@@ -157,22 +141,52 @@ class AudioSoundWasm extends AudioSound {
 
   @override
   void stop({Duration fadeTime = Duration.zero}) {
-    _stopAudioSound.apply(<dynamic>[
-      nativePtr,
-      (fadeTime.inMicroseconds * 1e-6 * sampleRate).round()
-    ]);
+    _stopAudioSound.callAsFunction(
+      null,
+      nativePtr.toJS,
+      (fadeTime.inMicroseconds * 1e-6 * sampleRate).round().toJS,
+    );
   }
 
   @override
   void dispose() {
-    _unrefAudioSound.apply(<dynamic>[nativePtr]);
+    _unrefAudioSound.callAsFunction(
+      null,
+      nativePtr.toJS,
+    );
     nativePtr = 0;
   }
+
+  @override
+  double get volume =>
+      (_getSoundVolume.callAsFunction(null, nativePtr.toJS) as js.JSNumber)
+          .toDartDouble;
+
+  @override
+  bool get completed =>
+      (_getSoundCompleted.callAsFunction(null, nativePtr.toJS) as js.JSBoolean)
+          .toDart;
+
+  @override
+  set volume(double value) =>
+      _setSoundVolume.callAsFunction(null, nativePtr.toJS, value.toJS);
+}
+
+extension JSFunctionUtilExtension on js.JSFunction {
+  @js.JS('call')
+  external js.JSAny? callAsFunction([
+    js.JSAny? thisArg,
+    js.JSAny? arg1,
+    js.JSAny? arg2,
+    js.JSAny? arg3,
+    js.JSAny? arg4,
+    js.JSAny? arg5,
+  ]);
 }
 
 class AudioEngineWasm extends AudioEngine {
   int nativePtr;
-  static late js.JsObject module;
+  static late js.JSObject module;
 
   @override
   final int channels;
@@ -182,53 +196,58 @@ class AudioEngineWasm extends AudioEngine {
   AudioEngineWasm(this.nativePtr,
       {required this.channels, required this.sampleRate});
 
-  static void initWasmModule(js.JsObject module) {
+  static void initWasmModule(js.JSObject module) {
     AudioEngineWasm.module = module;
-    _makeAudioEngine = module['makeAudioEngine'] as js.JsFunction;
-    _engineTime = module['engineTime'] as js.JsFunction;
-    _audioSourceNumChannels = module['audioSourceNumChannels'] as js.JsFunction;
-    _audioSourceSampleRate = module['audioSourceSampleRate'] as js.JsFunction;
-    _audioSourceFormat = module['audioSourceFormat'] as js.JsFunction;
-    _numChannels = module['numChannels'] as js.JsFunction;
-    _sampleRate = module['sampleRate'] as js.JsFunction;
-    _unrefAudioEngine = module['unrefAudioEngine'] as js.JsFunction;
-    _makeAudioSourceBuffer = module['makeAudioSourceBuffer'] as js.JsFunction;
-    _simpleArrayData = module['simpleArrayData'] as js.JsFunction;
-    _makeAudioSource = module['makeAudioSource'] as js.JsFunction;
-    _makeAudioReader = module['makeAudioReader'] as js.JsFunction;
-    _audioReaderRead = module['audioReaderRead'] as js.JsFunction;
-    _unrefAudioSource = module['unrefAudioSource'] as js.JsFunction;
-    _unrefAudioReader = module['unrefAudioReader'] as js.JsFunction;
-    _playAudioSource = module['playAudioSource'] as js.JsFunction;
-    _unrefAudioSound = module['unrefAudioSound'] as js.JsFunction;
-    _stopAudioSound = module['stopAudioSound'] as js.JsFunction;
+    _makeAudioEngine = module['makeAudioEngine'] as js.JSFunction;
+    _engineTime = module['engineTime'] as js.JSFunction;
+    _audioSourceNumChannels = module['audioSourceNumChannels'] as js.JSFunction;
+    _audioSourceSampleRate = module['audioSourceSampleRate'] as js.JSFunction;
+    _audioSourceFormat = module['audioSourceFormat'] as js.JSFunction;
+    _numChannels = module['numChannels'] as js.JSFunction;
+    _sampleRate = module['sampleRate'] as js.JSFunction;
+    _unrefAudioEngine = module['unrefAudioEngine'] as js.JSFunction;
+    _makeAudioSourceBuffer = module['makeAudioSourceBuffer'] as js.JSFunction;
+    _simpleArrayData = module['simpleArrayData'] as js.JSFunction;
+    _makeAudioSource = module['makeAudioSource'] as js.JSFunction;
+    _makeAudioReader = module['makeAudioReader'] as js.JSFunction;
+    _audioReaderRead = module['audioReaderRead'] as js.JSFunction;
+    _unrefAudioSource = module['unrefAudioSource'] as js.JSFunction;
+    _unrefAudioReader = module['unrefAudioReader'] as js.JSFunction;
+    _playAudioSource = module['playAudioSource'] as js.JSFunction;
+    _unrefAudioSound = module['unrefAudioSound'] as js.JSFunction;
+    _stopAudioSound = module['stopAudioSound'] as js.JSFunction;
+    _getSoundVolume = module['getSoundVolume'] as js.JSFunction;
+    _getSoundCompleted = module['getSoundCompleted'] as js.JSFunction;
+    _setSoundVolume = module['setSoundVolume'] as js.JSFunction;
+    _engineInitLevelMonitor = module['engineInitLevelMonitor'] as js.JSFunction;
+    _engineLevel = module['engineLevel'] as js.JSFunction;
     _makeBufferedAudioSource =
-        module['makeBufferedAudioSource'] as js.JsFunction;
-    _bufferedAudioSamples = module['bufferedAudioSamples'] as js.JsFunction;
+        module['makeBufferedAudioSource'] as js.JSFunction;
+    _bufferedAudioSamples = module['bufferedAudioSamples'] as js.JSFunction;
+    _heapViewU8 = module['heapViewU8'] as js.JSFunction;
+    _heapViewF32 = module['heapViewF32'] as js.JSFunction;
   }
 
   @override
   void dispose() {
-    _unrefAudioEngine.apply(<dynamic>[nativePtr]);
+    _unrefAudioEngine.callAsFunction(null, nativePtr.toJS);
     nativePtr = 0;
   }
 
-  static Uint8List wasmHeapUint8(int ptr, int length) {
-    // Make sure to access HEAPU8 dynamically as the reference can change if the
-    // WASM heap is resized.
-    var heap = module['HEAPU8'] as Uint8List;
-    return Uint8List.sublistView(heap, ptr, ptr + length);
-  }
+  static Uint8List wasmHeapUint8(int ptr, int length) =>
+      (_heapViewU8.callAsFunction(null, ptr.toJS, length.toJS)
+              as js.JSUint8Array)
+          .toDart;
 
-  static Float32List wasmHeapFloat32(int ptr, int length) {
-    // Make sure to access HEAPF32 dynamically as the reference can change if
-    // the WASM heap is resized.
-    var heap = module['HEAPF32'] as Float32List;
-    return Float32List.sublistView(heap, ptr, ptr + length);
-  }
+  static Float32List wasmHeapFloat32(int ptr, int length) =>
+      (_heapViewF32.callAsFunction(null, ptr.toJS, length.toJS)
+              as js.JSFloat32Array)
+          .toDart;
 
   @override
-  int get timeInFrames => _engineTime.apply(<dynamic>[nativePtr]) as int;
+  int get timeInFrames =>
+      (_engineTime.callAsFunction(null, nativePtr.toJS) as js.JSNumber)
+          .toDartInt;
 
   @override
   AudioSound play(AudioSource source, int engineStartTime, int engineEndTime,
@@ -237,43 +256,67 @@ class AudioEngineWasm extends AudioEngine {
       throw UnsupportedError('Tried to play an unsupported AudioSource.');
     }
     return AudioSoundWasm(
-      _playAudioSource.apply(<dynamic>[
-        (source as AudioSourceWasm).nativePtr,
-        nativePtr,
-        engineStartTime,
-        engineEndTime,
-        soundStartTime,
-      ]) as int,
+      (_playAudioSource.callAsFunction(
+        null,
+        (source as AudioSourceWasm).nativePtr.toJS,
+        nativePtr.toJS,
+        engineStartTime.toJS,
+        engineEndTime.toJS,
+        soundStartTime.toJS,
+      ) as js.JSNumber)
+          .toDartInt,
       sampleRate,
     );
   }
+
+  @override
+  void monitorLevels() => _engineInitLevelMonitor.callAsFunction(
+        null,
+        nativePtr.toJS,
+      );
+
+  @override
+  double level(int channel) =>
+      (_engineLevel.callAsFunction(null, nativePtr.toJS, channel.toJS)
+              as js.JSNumber)
+          .toDartDouble;
 }
 
 StreamingAudioSource loadAudioSource(Uint8List bytes) {
-  var simpleArrayUint8 =
-      _makeAudioSourceBuffer.apply(<dynamic>[bytes.length]) as int;
+  var simpleArrayUint8 = (_makeAudioSourceBuffer.callAsFunction(
+          null, bytes.length.toJS) as js.JSNumber)
+      .toDartInt;
 
   var data = AudioEngineWasm.wasmHeapUint8(
-      _simpleArrayData.apply(<dynamic>[simpleArrayUint8]) as int, bytes.length);
+      (_simpleArrayData.callAsFunction(null, simpleArrayUint8.toJS)
+              as js.JSNumber)
+          .toDartInt,
+      bytes.length);
   data.setAll(0, bytes);
 
   return StreamingAudioSourceWasm(
-    _makeAudioSource.apply(<dynamic>[simpleArrayUint8]) as int,
+    (_makeAudioSource.callAsFunction(null, simpleArrayUint8.toJS)
+            as js.JSNumber)
+        .toDartInt,
   );
 }
 
 AudioEngine? initAudioDevice(int channels, int sampleRate) {
-  var engine = _makeAudioEngine.apply(<dynamic>[
-    channels,
-    sampleRate,
-  ]) as int;
+  var engine = (_makeAudioEngine.callAsFunction(
+    null,
+    channels.toJS,
+    sampleRate.toJS,
+  ) as js.JSNumber)
+      .toDartInt;
 
   if (engine == 0) {
     return null;
   }
   return AudioEngineWasm(
     engine,
-    channels: _numChannels.apply(<dynamic>[engine]) as int,
-    sampleRate: _sampleRate.apply(<dynamic>[engine]) as int,
+    channels: (_numChannels.callAsFunction(null, engine.toJS) as js.JSNumber)
+        .toDartInt,
+    sampleRate: (_sampleRate.callAsFunction(null, engine.toJS) as js.JSNumber)
+        .toDartInt,
   );
 }

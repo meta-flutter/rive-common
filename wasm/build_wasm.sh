@@ -4,6 +4,7 @@ set -e
 CONFIG=debug
 SINGLE=
 THREADS=
+SIMD=
 for var in "$@"; do
     if [[ $var = "release" ]]; then
         CONFIG=release
@@ -13,6 +14,9 @@ for var in "$@"; do
     fi
     if [[ $var = "threads" ]]; then
         THREADS=--use_threads
+    fi
+    if [[ $var = "simd" ]]; then
+        SIMD=--use_simd
     fi
 done
 
@@ -50,7 +54,7 @@ source ./get_emcc.sh
 
 export PREMAKE=bin/premake5
 
-$PREMAKE --scripts=../macos/rive-cpp/build --file=../premake5_rive_plugin.lua gmake2 $SINGLE $THREADS --arch=wasm
+$PREMAKE --scripts=../macos/rive-cpp/build --file=../premake5_rive_plugin.lua gmake2 $SINGLE $THREADS $SIMD --arch=wasm
 
 cd ..
 for var in "$@"; do
@@ -62,4 +66,13 @@ done
 
 AR=emar CC=emcc CXX=em++ make config=$CONFIG -j$(($(sysctl -n hw.physicalcpu) + 1))
 
-du -hs wasm/build/bin/$CONFIG/rive_text.wasm
+if [[ ! -z $THREADS ]]; then
+    du -hs wasm/build/bin/$CONFIG/threads/rive_text.wasm
+    cp wasm/build/bin/$CONFIG/threads/rive_text.wasm ../editor/web/rive_text.wasm
+    cp wasm/build/bin/$CONFIG/threads/rive_text.js ../editor/web/rive_text.js
+    cp wasm/build/bin/$CONFIG/threads/rive_text.worker.js ../editor/web/rive_text.worker.js
+elif [[ ! -z $SIMD ]]; then
+    du -hs wasm/build/bin/$CONFIG/simd/rive_text.wasm
+else
+    du -hs wasm/build/bin/$CONFIG/rive_text.wasm
+fi

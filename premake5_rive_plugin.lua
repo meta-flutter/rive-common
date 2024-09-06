@@ -70,7 +70,6 @@ do
     do
         buildoptions({
             '-s STRICT=1',
-            '-msimd128',
             '-s DISABLE_EXCEPTION_CATCHING=1',
             '-DEMSCRIPTEN_HAS_UNBOUND_TYPE_NAMES=0',
             '--no-entry',
@@ -101,6 +100,22 @@ do
         buildoptions({ '-target x86_64-apple-macos10.12' })
         linkoptions({ '-target x86_64-apple-macos10.12' })
     end
+    filter({ 'options:arch=wasm', 'options:use_simd' })
+    do
+        targetdir('wasm/build/bin/%{cfg.buildcfg}/simd/')
+        objdir('wasm/build/obj/%{cfg.buildcfg}/simd/')
+        buildoptions({ '-msimd128' })
+    end
+
+    filter({ 'system:linux' })
+    do
+        if os.isfile('/.dockerenv') then
+            -- Docker complains about this otherwise.
+            pic('on')
+            buildoptions({ '-fPIC' })
+            linkoptions({ '-fPIC' })
+        end
+    end
 end
 
 project('rive_text')
@@ -117,9 +132,23 @@ do
     defines({
         'WITH_RIVE_TEXT',
         'WITH_RIVE_AUDIO',
+        'WITH_RIVE_AUDIO_TOOLS',
+        'MA_NO_RESOURCE_MANAGER',
         'HAVE_OT',
         'HB_NO_FALLBACK_SHAPE',
         'HB_NO_WIN1256',
+        'HB_NO_EXTERN_HELPERS',
+        'HB_DISABLE_DEPRECATED',
+        'HB_NO_COLOR',
+        'HB_NO_BITMAP',
+        'HB_NO_BUFFER_SERIALIZE',
+        'HB_NO_SETLOCALE',
+        'HB_NO_STYLE',
+        'HB_NO_VERTICAL',
+        'HB_NO_LAYOUT_COLLECT_GLYPHS',
+        'HB_NO_LAYOUT_RARELY_USED',
+        'HB_NO_LAYOUT_UNUSED',
+        'HB_NO_OT_FONT_GLYPH_NAMES',
     })
 
     includedirs({
@@ -386,6 +415,7 @@ do
         })
         linkoptions({
             '--closure=1',
+            '-s STACK_SIZE=256kb',
             '-s WASM_BIGINT',
             '--closure-args="--externs ./wasm/js/externs.js"',
             '-lembind',
@@ -394,11 +424,11 @@ do
             '-s NO_EXIT_RUNTIME=1',
             '-s STRICT=1',
             '-s INCOMING_MODULE_JS_API=onRuntimeInitialized',
+            '-s EXPORTED_RUNTIME_METHODS=wasmMemory',
             '-s ALLOW_MEMORY_GROWTH=1',
             '-s DISABLE_EXCEPTION_CATCHING=1',
             '-s WASM=1',
             '-s USE_ES6_IMPORT_META=0',
-            '-s EXPORT_NAME="RiveText"',
             '-DEMSCRIPTEN_HAS_UNBOUND_TYPE_NAMES=0',
             '--no-entry',
             '--pre-js ./wasm/js/rive_text.js',
@@ -411,6 +441,8 @@ do
     do
         buildoptions({ '-pthread' })
         linkoptions({ '-pthread', '-sPTHREAD_POOL_SIZE=6' })
+        targetdir('wasm/build/bin/%{cfg.buildcfg}/threads/')
+        objdir('wasm/build/obj/%{cfg.buildcfg}/threads/')
     end
 
     filter({ 'options:arch=wasm', 'options:single_file' })
@@ -466,6 +498,38 @@ do
         buildoptions({ '-target x86_64-apple-macos10.12' })
         linkoptions({ '-target x86_64-apple-macos10.12' })
     end
+
+    filter({ 'options:arch=wasm', 'not options:use_simd' })
+    do
+        linkoptions({
+            '-s EXPORT_NAME="RiveTextNoSimd"',
+        })
+    end
+    filter({ 'options:arch=wasm', 'options:use_simd' })
+    do
+        linkoptions({
+            '-s EXPORT_NAME="RiveText"',
+        })
+
+        targetdir('wasm/build/bin/%{cfg.buildcfg}/simd/')
+        objdir('wasm/build/obj/%{cfg.buildcfg}/simd/')
+        buildoptions({ '-msimd128' })
+    end
+    filter({ 'options:arch=wasm', 'options:use_simd', 'options:use_threads' })
+    do
+        targetdir('wasm/build/bin/%{cfg.buildcfg}/threads/')
+        objdir('wasm/build/obj/%{cfg.buildcfg}/threads/')
+    end
+
+    filter({ 'system:linux' })
+    do
+        if os.isfile('/.dockerenv') then
+            -- Docker complains about this otherwise.
+            pic('on')
+            buildoptions({ '-fPIC' })
+            linkoptions({ '-fPIC' })
+        end
+    end
 end
 
 newoption({
@@ -476,6 +540,11 @@ newoption({
 newoption({
     trigger = 'use_threads',
     description = 'Whether to use threads for audio decoding.',
+})
+
+newoption({
+    trigger = 'use_simd',
+    description = 'Whether to use simd ops.',
 })
 
 newoption({

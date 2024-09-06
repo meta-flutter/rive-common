@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import 'src/rive_audio_ffi.dart'
-    if (dart.library.html) 'src/rive_audio_wasm.dart';
+    if (dart.library.js_interop) 'src/rive_audio_wasm.dart';
 
 enum AudioFormat { unknown, wav, flac, mp3, vorbis, buffered }
 
@@ -32,11 +32,20 @@ abstract class AudioEngine {
     int engineEndTime,
     int soundStartTime,
   );
+
+  /// Start monitoring levels.
+  void monitorLevels();
+
+  /// Get the current level of a channel.
+  double level(int channel);
 }
 
 abstract class AudioSound {
   void stop({Duration fadeTime = Duration.zero});
+  double get volume;
+  set volume(double value);
   void dispose();
+  bool get completed;
 }
 
 abstract class AudioSource {

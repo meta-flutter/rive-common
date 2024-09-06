@@ -3,17 +3,20 @@
 
 using namespace rive;
 
-void NestedSimpleAnimation::advance(float elapsedSeconds)
+bool NestedSimpleAnimation::advance(float elapsedSeconds)
 {
+    bool keepGoing = false;
     if (m_AnimationInstance != nullptr)
     {
         if (isPlaying())
         {
-            m_AnimationInstance->advance(elapsedSeconds * speed());
+            keepGoing =
+                m_AnimationInstance->advance(elapsedSeconds * speed(), m_AnimationInstance.get());
         }
         if (mix() != 0.0f)
         {
             m_AnimationInstance->apply(mix());
         }
     }
+    return keepGoing;
 }

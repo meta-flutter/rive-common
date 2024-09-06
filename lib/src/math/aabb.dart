@@ -83,6 +83,13 @@ class AABB {
         right = r,
         bottom = b;
 
+  AABB.fromLTRB(double l, double t, double r, double b)
+      : this.fromValues(l, t, r, b);
+
+  AABB.fromLTWH(double l, double t, double w, double h)
+      : this.fromValues(l, t, l + w, t + h);
+
+  @Deprecated('Use AABB.fromLTWH')
   AABB.fromCoordinates({
     required double x,
     required double y,

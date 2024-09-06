@@ -16,6 +16,17 @@
         "string": "artboardid"
       },
       "description": "Identifier used to track the Artboard nested."
+    },
+    "dataBindPathIds": {
+      "type": "List<Id>",
+      "typeRuntime": "Bytes",
+      "encoded": true,
+      "initialValue": "[]",
+      "key": {
+        "int": 582,
+        "string": "databindpathids"
+      },
+      "description": "Path to the selected property."
     }
   }
 }

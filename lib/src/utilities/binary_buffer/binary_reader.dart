@@ -12,6 +12,8 @@ class BinaryReader {
 
   int get position => readIndex;
 
+  int get size => buffer.lengthInBytes;
+
   BinaryReader(this.buffer, {this.endian = Endian.little});
 
   BinaryReader.fromList(Uint8List list, {this.endian = Endian.little})

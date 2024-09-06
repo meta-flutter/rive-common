@@ -103,11 +103,11 @@ void main() {
     expect(style.flexBasis.value.isNaN, true);
     expect(style.flexBasis.unit, LayoutUnit.auto);
 
-    style.flexBasis = LayoutValue(value: 34.7, unit: LayoutUnit.percent);
+    style.flexBasis = const LayoutValue(value: 34.7, unit: LayoutUnit.percent);
     expect(style.flexBasis.unit, LayoutUnit.percent);
     expect(style.flexBasis.value, closeTo(34.7, epsilon));
 
-    style.flexBasis = LayoutValue(value: 22.2, unit: LayoutUnit.point);
+    style.flexBasis = const LayoutValue(value: 22.2, unit: LayoutUnit.point);
     expect(style.flexBasis.unit, LayoutUnit.point);
     expect(style.flexBasis.value, closeTo(22.2, epsilon));
 
@@ -117,7 +117,7 @@ void main() {
 
     style.setMargin(
       LayoutEdge.left,
-      LayoutValue(
+      const LayoutValue(
         unit: LayoutUnit.point,
         value: 22.0,
       ),
@@ -132,7 +132,7 @@ void main() {
 
     style.setPosition(
       LayoutEdge.left,
-      LayoutValue(
+      const LayoutValue(
         unit: LayoutUnit.point,
         value: 22.0,
       ),
@@ -147,7 +147,7 @@ void main() {
 
     style.setPadding(
       LayoutEdge.left,
-      LayoutValue(
+      const LayoutValue(
         unit: LayoutUnit.point,
         value: 22.0,
       ),
@@ -162,7 +162,7 @@ void main() {
 
     style.setBorder(
       LayoutEdge.left,
-      LayoutValue(
+      const LayoutValue(
         unit: LayoutUnit.point,
         value: 22.0,
       ),

@@ -9784,8 +9784,14 @@ This will run on an optimized path when the volume is equal to 1.
 MA_API ma_result ma_mix_pcm_frames_f32(float* pDst, const float* pSrc, ma_uint64 frameCount, ma_uint32 channels, float volume);
 
 
+typedef enum
+{
+    ma_seek_origin_start,
+    ma_seek_origin_current,
+    ma_seek_origin_end  /* Not used by decoders. */
+} ma_seek_origin;
 
-
+#ifndef MA_NO_RESOURCE_MANAGER
 /************************************************************************************************************************************************************
 
 VFS
@@ -9803,13 +9809,6 @@ typedef enum
     MA_OPEN_MODE_READ  = 0x00000001,
     MA_OPEN_MODE_WRITE = 0x00000002
 } ma_open_mode_flags;
-
-typedef enum
-{
-    ma_seek_origin_start,
-    ma_seek_origin_current,
-    ma_seek_origin_end  /* Not used by decoders. */
-} ma_seek_origin;
 
 typedef struct
 {
@@ -9846,6 +9845,7 @@ typedef struct
 
 MA_API ma_result ma_default_vfs_init(ma_default_vfs* pVFS, const ma_allocation_callbacks* pAllocationCallbacks);
 
+#endif
 
 
 typedef ma_result (* ma_read_proc)(void* pUserData, void* pBufferOut, size_t bytesToRead, size_t* pBytesRead);
@@ -9940,11 +9940,13 @@ struct ma_decoder
     ma_allocation_callbacks allocationCallbacks;
     union
     {
+#ifndef MA_NO_RESOURCE_MANAGER
         struct
         {
             ma_vfs* pVFS;
             ma_vfs_file file;
         } vfs;
+#endif
         struct
         {
             const ma_uint8* pData;
@@ -9959,11 +9961,12 @@ MA_API ma_decoder_config ma_decoder_config_init_default(void);
 
 MA_API ma_result ma_decoder_init(ma_decoder_read_proc onRead, ma_decoder_seek_proc onSeek, void* pUserData, const ma_decoder_config* pConfig, ma_decoder* pDecoder);
 MA_API ma_result ma_decoder_init_memory(const void* pData, size_t dataSize, const ma_decoder_config* pConfig, ma_decoder* pDecoder);
+#ifndef MA_NO_RESOURCE_MANAGER
 MA_API ma_result ma_decoder_init_vfs(ma_vfs* pVFS, const char* pFilePath, const ma_decoder_config* pConfig, ma_decoder* pDecoder);
 MA_API ma_result ma_decoder_init_vfs_w(ma_vfs* pVFS, const wchar_t* pFilePath, const ma_decoder_config* pConfig, ma_decoder* pDecoder);
 MA_API ma_result ma_decoder_init_file(const char* pFilePath, const ma_decoder_config* pConfig, ma_decoder* pDecoder);
 MA_API ma_result ma_decoder_init_file_w(const wchar_t* pFilePath, const ma_decoder_config* pConfig, ma_decoder* pDecoder);
-
+#endif
 /*
 Uninitializes a decoder.
 */
@@ -10030,7 +10033,9 @@ MA_API ma_result ma_decoder_get_available_frames(ma_decoder* pDecoder, ma_uint64
 Helper for opening and decoding a file into a heap allocated block of memory. Free the returned pointer with ma_free(). On input,
 pConfig should be set to what you want. On output it will be set to what you got.
 */
+#ifndef MA_NO_RESOURCE_MANAGER
 MA_API ma_result ma_decode_from_vfs(ma_vfs* pVFS, const char* pFilePath, ma_decoder_config* pConfig, ma_uint64* pFrameCountOut, void** ppPCMFramesOut);
+#endif
 MA_API ma_result ma_decode_file(const char* pFilePath, ma_decoder_config* pConfig, ma_uint64* pFrameCountOut, void** ppPCMFramesOut);
 MA_API ma_result ma_decode_memory(const void* pData, size_t dataSize, ma_decoder_config* pConfig, ma_uint64* pFrameCountOut, void** ppPCMFramesOut);
 
@@ -10075,6 +10080,7 @@ struct ma_encoder
     ma_encoder_write_pcm_frames_proc onWritePCMFrames;
     void* pUserData;
     void* pInternalEncoder;
+#ifndef MA_NO_RESOURCE_MANAGER
     union
     {
         struct
@@ -10083,13 +10089,16 @@ struct ma_encoder
             ma_vfs_file file;
         } vfs;
     } data;
+#endif
 };
 
 MA_API ma_result ma_encoder_init(ma_encoder_write_proc onWrite, ma_encoder_seek_proc onSeek, void* pUserData, const ma_encoder_config* pConfig, ma_encoder* pEncoder);
+#ifndef MA_NO_RESOURCE_MANAGER
 MA_API ma_result ma_encoder_init_vfs(ma_vfs* pVFS, const char* pFilePath, const ma_encoder_config* pConfig, ma_encoder* pEncoder);
 MA_API ma_result ma_encoder_init_vfs_w(ma_vfs* pVFS, const wchar_t* pFilePath, const ma_encoder_config* pConfig, ma_encoder* pEncoder);
 MA_API ma_result ma_encoder_init_file(const char* pFilePath, const ma_encoder_config* pConfig, ma_encoder* pEncoder);
 MA_API ma_result ma_encoder_init_file_w(const wchar_t* pFilePath, const ma_encoder_config* pConfig, ma_encoder* pEncoder);
+#endif
 MA_API void ma_encoder_uninit(ma_encoder* pEncoder);
 MA_API ma_result ma_encoder_write_pcm_frames(ma_encoder* pEncoder, const void* pFramesIn, ma_uint64 frameCount, ma_uint64* pFramesWritten);
 
@@ -11207,7 +11216,9 @@ typedef struct
     ma_bool32 noAutoStart;                          /* When set to true, requires an explicit call to ma_engine_start(). This is false by default, meaning the engine will be started automatically in ma_engine_init(). */
     ma_bool32 noDevice;                             /* When set to true, don't create a default device. ma_engine_read_pcm_frames() can be called manually to read data. */
     ma_mono_expansion_mode monoExpansionMode;       /* Controls how the mono channel should be expanded to other channels when spatialization is disabled on a sound. */
+#ifndef MA_NO_RESOURCE_MANAGER
     ma_vfs* pResourceManagerVFS;                    /* A pointer to a pre-allocated VFS object to use with the resource manager. This is ignored if pResourceManager is not NULL. */
+#endif
     ma_engine_process_proc onProcess;               /* Fired at the end of each call to ma_engine_read_pcm_frames(). For engine's that manage their own internal device (the default configuration), this will be fired from the audio thread, and you do not need to call ma_engine_read_pcm_frames() manually in order to trigger this. */
     void* pProcessUserData;                         /* User data that's passed into onProcess. */
 } ma_engine_config;
@@ -58836,7 +58847,7 @@ MA_API ma_result ma_paged_audio_buffer_get_length_in_pcm_frames(ma_paged_audio_b
 }
 
 
-
+#ifndef MA_NO_RESOURCE_MANAGER
 /**************************************************************************************************************************************************************
 
 VFS
@@ -59807,7 +59818,7 @@ MA_API ma_result ma_vfs_open_and_read_file_w(ma_vfs* pVFS, const wchar_t* pFileP
 {
     return ma_vfs_open_and_read_file_ex(pVFS, NULL, pFilePath, ppData, pSize, pAllocationCallbacks);
 }
-
+#endif
 
 
 /**************************************************************************************************************************************************************
@@ -60868,7 +60879,7 @@ static ma_result ma_decoder_init_from_vtable__internal(const ma_decoding_backend
 
     return MA_SUCCESS;
 }
-
+#ifndef MA_NO_RESOURCE_MANAGER
 static ma_result ma_decoder_init_from_file__internal(const ma_decoding_backend_vtable* pVTable, void* pVTableUserData, const char* pFilePath, const ma_decoder_config* pConfig, ma_decoder* pDecoder)
 {
     ma_result result;
@@ -60926,7 +60937,7 @@ static ma_result ma_decoder_init_from_file_w__internal(const ma_decoding_backend
 
     return MA_SUCCESS;
 }
-
+#endif
 static ma_result ma_decoder_init_from_memory__internal(const ma_decoding_backend_vtable* pVTable, void* pVTableUserData, const void* pData, size_t dataSize, const ma_decoder_config* pConfig, ma_decoder* pDecoder)
 {
     ma_result result;
@@ -60993,6 +61004,7 @@ static ma_result ma_decoder_init_custom__internal(const ma_decoder_config* pConf
     return MA_NO_BACKEND;
 }
 
+#ifndef MA_NO_RESOURCE_MANAGER
 static ma_result ma_decoder_init_custom_from_file__internal(const char* pFilePath, const ma_decoder_config* pConfig, ma_decoder* pDecoder)
 {
     ma_result result = MA_NO_BACKEND;
@@ -61050,6 +61062,7 @@ static ma_result ma_decoder_init_custom_from_file_w__internal(const wchar_t* pFi
     /* Getting here means we couldn't find a backend. */
     return MA_NO_BACKEND;
 }
+#endif
 
 static ma_result ma_decoder_init_custom_from_memory__internal(const void* pData, size_t dataSize, const ma_decoder_config* pConfig, ma_decoder* pDecoder)
 {
@@ -61748,7 +61761,7 @@ static ma_result ma_decoder_init_wav__internal(const ma_decoder_config* pConfig,
 {
     return ma_decoder_init_from_vtable__internal(&g_ma_decoding_backend_vtable_wav, NULL, pConfig, pDecoder);
 }
-
+#ifndef MA_NO_RESOURCE_MANAGER
 static ma_result ma_decoder_init_wav_from_file__internal(const char* pFilePath, const ma_decoder_config* pConfig, ma_decoder* pDecoder)
 {
     return ma_decoder_init_from_file__internal(&g_ma_decoding_backend_vtable_wav, NULL, pFilePath, pConfig, pDecoder);
@@ -61758,7 +61771,7 @@ static ma_result ma_decoder_init_wav_from_file_w__internal(const wchar_t* pFileP
 {
     return ma_decoder_init_from_file_w__internal(&g_ma_decoding_backend_vtable_wav, NULL, pFilePath, pConfig, pDecoder);
 }
-
+#endif
 static ma_result ma_decoder_init_wav_from_memory__internal(const void* pData, size_t dataSize, const ma_decoder_config* pConfig, ma_decoder* pDecoder)
 {
     return ma_decoder_init_from_memory__internal(&g_ma_decoding_backend_vtable_wav, NULL, pData, dataSize, pConfig, pDecoder);
@@ -62370,7 +62383,7 @@ static ma_result ma_decoder_init_flac__internal(const ma_decoder_config* pConfig
 {
     return ma_decoder_init_from_vtable__internal(&g_ma_decoding_backend_vtable_flac, NULL, pConfig, pDecoder);
 }
-
+#ifndef MA_NO_RESOURCE_MANAGER
 static ma_result ma_decoder_init_flac_from_file__internal(const char* pFilePath, const ma_decoder_config* pConfig, ma_decoder* pDecoder)
 {
     return ma_decoder_init_from_file__internal(&g_ma_decoding_backend_vtable_flac, NULL, pFilePath, pConfig, pDecoder);
@@ -62380,7 +62393,7 @@ static ma_result ma_decoder_init_flac_from_file_w__internal(const wchar_t* pFile
 {
     return ma_decoder_init_from_file_w__internal(&g_ma_decoding_backend_vtable_flac, NULL, pFilePath, pConfig, pDecoder);
 }
-
+#endif
 static ma_result ma_decoder_init_flac_from_memory__internal(const void* pData, size_t dataSize, const ma_decoder_config* pConfig, ma_decoder* pDecoder)
 {
     return ma_decoder_init_from_memory__internal(&g_ma_decoding_backend_vtable_flac, NULL, pData, dataSize, pConfig, pDecoder);
@@ -63050,7 +63063,7 @@ static ma_result ma_decoder_init_mp3__internal(const ma_decoder_config* pConfig,
 {
     return ma_decoder_init_from_vtable__internal(&g_ma_decoding_backend_vtable_mp3, NULL, pConfig, pDecoder);
 }
-
+#ifndef MA_NO_RESOURCE_MANAGER
 static ma_result ma_decoder_init_mp3_from_file__internal(const char* pFilePath, const ma_decoder_config* pConfig, ma_decoder* pDecoder)
 {
     return ma_decoder_init_from_file__internal(&g_ma_decoding_backend_vtable_mp3, NULL, pFilePath, pConfig, pDecoder);
@@ -63060,7 +63073,7 @@ static ma_result ma_decoder_init_mp3_from_file_w__internal(const wchar_t* pFileP
 {
     return ma_decoder_init_from_file_w__internal(&g_ma_decoding_backend_vtable_mp3, NULL, pFilePath, pConfig, pDecoder);
 }
-
+#endif
 static ma_result ma_decoder_init_mp3_from_memory__internal(const void* pData, size_t dataSize, const ma_decoder_config* pConfig, ma_decoder* pDecoder)
 {
     return ma_decoder_init_from_memory__internal(&g_ma_decoding_backend_vtable_mp3, NULL, pData, dataSize, pConfig, pDecoder);
@@ -64349,7 +64362,9 @@ MA_API ma_result ma_decoder_init_memory(const void* pData, size_t dataSize, cons
     defined(MA_HAS_FLAC)   || \
     defined(MA_HAS_VORBIS) || \
     defined(MA_HAS_OPUS)
+#ifndef MA_NO_RESOURCE_MANAGER
 #define MA_HAS_PATH_API
+#endif
 #endif
 
 #if defined(MA_HAS_PATH_API)
@@ -64521,8 +64536,7 @@ static ma_bool32 ma_path_extension_equal_w(const wchar_t* path, const wchar_t* e
 }
 #endif  /* MA_HAS_PATH_API */
 
-
-
+#ifndef MA_NO_RESOURCE_MANAGER
 static ma_result ma_decoder__on_read_vfs(ma_decoder* pDecoder, void* pBufferOut, size_t bytesToRead, size_t* pBytesRead)
 {
     MA_ASSERT(pDecoder   != NULL);
@@ -65107,6 +65121,7 @@ MA_API ma_result ma_decoder_init_file_w(const wchar_t* pFilePath, const ma_decod
 
     return MA_SUCCESS;
 }
+#endif
 
 MA_API ma_result ma_decoder_uninit(ma_decoder* pDecoder)
 {
@@ -65119,12 +65134,12 @@ MA_API ma_result ma_decoder_uninit(ma_decoder* pDecoder)
             pDecoder->pBackendVTable->onUninit(pDecoder->pBackendUserData, pDecoder->pBackend, &pDecoder->allocationCallbacks);
         }
     }
-
+#ifndef MA_NO_RESOURCE_MANAGER
     if (pDecoder->onRead == ma_decoder__on_read_vfs) {
         ma_vfs_or_default_close(pDecoder->data.vfs.pVFS, pDecoder->data.vfs.file);
         pDecoder->data.vfs.file = NULL;
     }
-
+#endif
     ma_data_converter_uninit(&pDecoder->converter, &pDecoder->allocationCallbacks);
     ma_data_source_uninit(&pDecoder->ds);
 
@@ -65565,6 +65580,7 @@ static ma_result ma_decoder__full_decode_and_uninit(ma_decoder* pDecoder, ma_dec
     return MA_SUCCESS;
 }
 
+#ifndef MA_NO_RESOURCE_MANAGER
 MA_API ma_result ma_decode_from_vfs(ma_vfs* pVFS, const char* pFilePath, ma_decoder_config* pConfig, ma_uint64* pFrameCountOut, void** ppPCMFramesOut)
 {
     ma_result result;
@@ -65594,7 +65610,7 @@ MA_API ma_result ma_decode_file(const char* pFilePath, ma_decoder_config* pConfi
 {
     return ma_decode_from_vfs(NULL, pFilePath, pConfig, pFrameCountOut, ppPCMFramesOut);
 }
-
+#endif
 MA_API ma_result ma_decode_memory(const void* pData, size_t dataSize, ma_decoder_config* pConfig, ma_uint64* pFrameCountOut, void** ppPCMFramesOut)
 {
     ma_decoder_config config;
@@ -65805,7 +65821,7 @@ MA_API ma_result ma_encoder_init__internal(ma_encoder_write_proc onWrite, ma_enc
 
     return result;
 }
-
+#ifndef MA_NO_RESOURCE_MANAGER
 static ma_result ma_encoder__on_write_vfs(ma_encoder* pEncoder, const void* pBufferIn, size_t bytesToWrite, size_t* pBytesWritten)
 {
     return ma_vfs_or_default_write(pEncoder->data.vfs.pVFS, pEncoder->data.vfs.file, pBufferIn, bytesToWrite, pBytesWritten);
@@ -65881,7 +65897,7 @@ MA_API ma_result ma_encoder_init_file_w(const wchar_t* pFilePath, const ma_encod
 {
     return ma_encoder_init_vfs_w(NULL, pFilePath, pConfig, pEncoder);
 }
-
+#endif
 MA_API ma_result ma_encoder_init(ma_encoder_write_proc onWrite, ma_encoder_seek_proc onSeek, void* pUserData, const ma_encoder_config* pConfig, ma_encoder* pEncoder)
 {
     ma_result result;
@@ -65904,12 +65920,13 @@ MA_API void ma_encoder_uninit(ma_encoder* pEncoder)
     if (pEncoder->onUninit) {
         pEncoder->onUninit(pEncoder);
     }
-
+#ifndef MA_NO_RESOURCE_MANAGER
     /* If we have a file handle, close it. */
     if (pEncoder->onWrite == ma_encoder__on_write_vfs) {
         ma_vfs_or_default_close(pEncoder->data.vfs.pVFS, pEncoder->data.vfs.file);
         pEncoder->data.vfs.file = NULL;
     }
+#endif
 }
 
 

@@ -23,20 +23,28 @@ function installRiveCpp {
         if [ -d ../../runtime ]; then
             echo "Getting rive-cpp from current repo."
             export INSTALL_TO=$PWD
-            mkdir -p rive-cpp
-            # cp -fR ../../runtime rive-cpp
-            # git clone machine1:/path/to/project machine2:/target/path
-            pushd ../../runtime
+            if git rev-parse --git-dir >/dev/null 2>&1; then
+                mkdir -p rive-cpp
+                # cp -fR ../../runtime rive-cpp
+                # git clone machine1:/path/to/project machine2:/target/path
+                pushd ../../runtime
 
-            function copyRepoFile {
-                mkdir -p $(dirname $INSTALL_TO/rive-cpp/$1)
-                cp $1 $INSTALL_TO/rive-cpp/$1
-                echo -en "\r\033[K$1"
-            }
-            export -f copyRepoFile
-            git ls-files | xargs -n1 bash -c 'copyRepoFile "$@"' _
-            echo -en "\r\033[K"
-            popd
+                function copyRepoFile {
+                    mkdir -p $(dirname $INSTALL_TO/rive-cpp/$1)
+                    cp $1 $INSTALL_TO/rive-cpp/$1
+                    echo -en "\r\033[K$1"
+                }
+                export -f copyRepoFile
+                git ls-files | xargs -n1 bash -c 'copyRepoFile "$@"' _
+                echo -en "\r\033[K"
+                popd
+            else
+                # We're probably inside a Docker container, so expect a "clean"
+                #   ../../runtime folder.
+                echo "Use a symbolic link."
+                ln -s ../../runtime "$INSTALL_TO/rive-cpp"
+            fi
+
         else
             echo "Cloning rive-cpp."
             git clone https://github.com/rive-app/rive-cpp
@@ -67,7 +75,7 @@ function installRiveCpp {
     if [ $FORCE == "true" ] || [ ! -d miniaudio ]; then
         rm -fR miniaudio
         echo "Cloning miniaudio."
-        git clone --depth 1 --branch "rive_changes" https://github.com/rive-app/miniaudio.git
+        git clone --depth 1 --branch "rive_changes_4" https://github.com/rive-app/miniaudio.git
     fi
     if [ $FORCE == "true" ] || [ ! -d yoga ]; then
         rm -fR yoga

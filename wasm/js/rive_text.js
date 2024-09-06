@@ -10,7 +10,7 @@ Module["onRuntimeInitialized"] = function () {
     var verbCount = glyph[3];
     var ptsPtr = glyph[1];
     var verbPtr = glyph[2];
-    var verbs = Module["HEAPU8"]["subarray"](verbPtr, verbPtr + verbCount);
+    var verbs = Module["heapViewU8"](verbPtr, verbCount);
 
     let pointCount = 0;
     for (var verb of verbs) {
@@ -30,14 +30,11 @@ Module["onRuntimeInitialized"] = function () {
       }
     }
 
-    const ptsStart = ptsPtr / 4;
+    const ptsStart = ptsPtr >> 2;
     return {
       "rawPath": glyph[0],
       "verbs": verbs,
-      "points": Module["HEAPF32"]["subarray"](
-        ptsStart,
-        ptsStart + pointCount * 2
-      ),
+      "points": Module["heapViewF32"](ptsStart, pointCount * 2),
     };
   };
 
@@ -46,7 +43,7 @@ Module["onRuntimeInitialized"] = function () {
     var shapeResult = nativeShapeText(codeUnits, runsList);
     return {
       "rawResult": shapeResult,
-      "results": Module["HEAPU8"]["subarray"](shapeResult),
+      "results": Module["heapViewU8"](shapeResult),
     };
   };
 
@@ -55,25 +52,19 @@ Module["onRuntimeInitialized"] = function () {
     var breakResult = nativeBreakLines(shape, width, align);
     return {
       "rawResult": breakResult,
-      "results": Module["HEAPU8"]["subarray"](breakResult),
+      "results": Module["heapViewU8"](breakResult),
     };
   };
 
   var nativeFontFeatures = Module["fontFeatures"];
   Module["fontFeatures"] = function (font) {
     var featuresPtr = nativeFontFeatures(font);
-
-    const view = new DataView(
-      Module["HEAPU8"]["buffer"],
-      Module["HEAPU8"]["byteOffset"] + featuresPtr
-    );
+    var heap = Module["heap"]();
+    const view = new DataView(heap, featuresPtr);
     var dataPtr = view["getUint32"](0, true);
     var size = view["getUint32"](4, true);
 
-    const dataView = new DataView(
-      Module["HEAPU8"]["buffer"],
-      Module["HEAPU8"]["byteOffset"] + dataPtr
-    );
+    const dataView = new DataView(heap, dataPtr);
 
     var tags = [];
     for (var i = 0; i < size; i++) {
@@ -83,5 +74,29 @@ Module["onRuntimeInitialized"] = function () {
 
     Module["deleteFontFeatures"](featuresPtr);
     return tags;
+  };
+
+  Module["heap"] = function (start, length) {
+    var wasmMemory = Module["wasmMemory"];
+    if (!wasmMemory) {
+      return Module["HEAPU8"]["buffer"];
+    }
+    return wasmMemory["buffer"];
+  };
+
+  Module["heapViewU8"] = function (start, length) {
+    var wasmMemory = Module["wasmMemory"];
+    if (!wasmMemory) {
+      return new Uint8Array(Module["HEAPU8"]["buffer"], start, length);
+    }
+    return new Uint8Array(wasmMemory["buffer"], start, length);
+  };
+
+  Module["heapViewF32"] = function (start, length) {
+    var wasmMemory = Module["wasmMemory"];
+    if (!wasmMemory) {
+      return new Float32Array(Module["HEAPF32"]["buffer"], start << 2, length);
+    }
+    return new Float32Array(wasmMemory["buffer"], start << 2, length);
   };
 };

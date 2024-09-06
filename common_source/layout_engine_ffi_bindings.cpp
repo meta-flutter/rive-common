@@ -433,7 +433,13 @@ EXPORT void yogaStyleSetMaxDimension(YGStyle* style, int dimension, float value,
     style->maxDimensions()[(YGDimension)dimension] = (YGValue){value, (YGUnit)unit};
 }
 
-EXPORT YGNode* makeYogaNode() { return new YGNode(); }
+EXPORT YGNode* makeYogaNode()
+{
+    auto node = new YGNode();
+    // Default to use fractional pixel values
+    node->getConfig()->setPointScaleFactor(0);
+    return node;
+}
 
 EXPORT void disposeYogaNode(YGNode* node) { delete node; }
 
@@ -470,7 +476,18 @@ EXPORT void yogaNodeInsertChild(YGNode* node, YGNode* child, int index)
     {
         return;
     }
-    YGNodeInsertChild(node, child, index);
+    node->insertChild(child, index);
+    child->setOwner(node);
+    node->markDirtyAndPropagate();
+}
+
+EXPORT void yogaNodeRemoveChild(YGNode* node, YGNode* child)
+{
+    if (node == nullptr || child == nullptr)
+    {
+        return;
+    }
+    YGNodeRemoveChild(node, child);
 }
 
 EXPORT void yogaNodeClearChildren(YGNode* node)
@@ -479,7 +496,7 @@ EXPORT void yogaNodeClearChildren(YGNode* node)
     {
         return;
     }
-    node->clearChildren();
+    YGNodeRemoveAllChildren(node);
 }
 
 EXPORT void yogaNodeCalculateLayout(YGNode* node,

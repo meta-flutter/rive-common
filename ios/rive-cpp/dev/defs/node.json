@@ -14,8 +14,15 @@
       "group": "position",
       "key": {
         "int": 13,
-        "string": "x"
-      }
+        "string": "x",
+        "alternates": [
+          {
+            "int": 9,
+            "string": "xArtboard"
+          }
+        ]
+      },
+      "bindable": true
     },
     "y": {
       "type": "double",
@@ -25,8 +32,15 @@
       "group": "position",
       "key": {
         "int": 14,
-        "string": "y"
-      }
+        "string": "y",
+        "alternates": [
+          {
+            "int": 10,
+            "string": "yArtboard"
+          }
+        ]
+      },
+      "bindable": true
     },
     "styleValue": {
       "type": "uint",

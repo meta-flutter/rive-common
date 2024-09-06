@@ -1,8 +1,15 @@
 
 #include "rive/importers/backboard_importer.hpp"
+#include "rive/artboard.hpp"
 #include "rive/nested_artboard.hpp"
+#include "rive/backboard.hpp"
 #include "rive/assets/file_asset_referencer.hpp"
 #include "rive/assets/file_asset.hpp"
+#include "rive/viewmodel/viewmodel.hpp"
+#include "rive/viewmodel/viewmodel_instance.hpp"
+#include "rive/data_bind/converters/data_converter.hpp"
+#include "rive/data_bind/converters/data_converter_group_item.hpp"
+#include "rive/data_bind/data_bind.hpp"
 #include <unordered_set>
 
 using namespace rive;
@@ -59,7 +66,6 @@ void BackboardImporter::addMissingArtboard() { m_NextArtboardId++; }
 
 StatusCode BackboardImporter::resolve()
 {
-
     for (auto nestedArtboard : m_NestedArtboards)
     {
         auto itr = m_ArtboardLookup.find(nestedArtboard->artboardId());
@@ -82,6 +88,38 @@ StatusCode BackboardImporter::resolve()
         auto asset = m_FileAssets[index];
         referencer->setAsset(asset);
     }
-
+    for (auto referencer : m_DataConverterReferencers)
+    {
+        auto index = (size_t)referencer->converterId();
+        if (index >= m_DataConverters.size() || index < 0)
+        {
+            continue;
+        }
+        referencer->converter(m_DataConverters[index]);
+    }
+    for (auto referencer : m_DataConverterGroupItemReferencers)
+    {
+        auto index = (size_t)referencer->converterId();
+        if (index >= m_DataConverters.size() || index < 0)
+        {
+            continue;
+        }
+        referencer->converter(m_DataConverters[index]);
+    }
     return StatusCode::Ok;
+}
+
+void BackboardImporter::addDataConverter(DataConverter* dataConverter)
+{
+    m_DataConverters.push_back(dataConverter);
+}
+
+void BackboardImporter::addDataConverterReferencer(DataBind* dataBind)
+{
+    m_DataConverterReferencers.push_back(dataBind);
+}
+
+void BackboardImporter::addDataConverterGroupItemReferencer(DataConverterGroupItem* dataBind)
+{
+    m_DataConverterGroupItemReferencers.push_back(dataBind);
 }

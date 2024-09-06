@@ -20,6 +20,8 @@ class Property {
   bool isSetOverride = false;
   bool isGetOverride = false;
   bool isEncoded = false;
+  bool isBindable = false;
+  bool isPureVirtual = false;
   FieldType? typeRuntime;
 
   static Property? make(
@@ -92,6 +94,14 @@ class Property {
     dynamic rt = data['typeRuntime'];
     if (rt is String) {
       typeRuntime = FieldType.find(rt);
+    }
+    dynamic b = data['bindable'];
+    if (b is bool) {
+      isBindable = b;
+    }
+    dynamic pv = data['pureVirtual'];
+    if (pv is bool) {
+      isPureVirtual = pv;
     }
     key = Key.fromJSON(data['key']) ?? Key.forProperty(this);
   }

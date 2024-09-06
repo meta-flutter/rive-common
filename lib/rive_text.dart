@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:collection';
 import 'dart:ui' as ui;
 
@@ -5,7 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:rive_common/math.dart';
 
 import 'src/rive_text_ffi.dart'
-    if (dart.library.html) 'src/rive_text_wasm.dart';
+    if (dart.library.js_interop) 'src/rive_text_wasm.dart';
 
 export 'src/glyph_lookup.dart';
 
@@ -19,6 +20,7 @@ abstract class RawPathCommand {
 
 abstract class RawPath with IterableMixin<RawPathCommand> {
   void dispose();
+
   void issueCommands(ui.Path path) {
     for (final command in this) {
       switch (command.verb) {
@@ -109,27 +111,10 @@ class LineRunGlyph {
 
   LineRunGlyph(this.run, this.index);
 
-  Float64List pathTransform(double x, double y) {
+  Mat2D pathTransform(double x, double y) {
     var v = run.offsetAt(index);
     var scale = run.fontSize;
-    return Float64List.fromList([
-      scale,
-      0.0,
-      0.0,
-      0.0,
-      0.0,
-      scale,
-      0.0,
-      0.0,
-      0.0,
-      0.0,
-      1.0,
-      0.0,
-      x + v.x,
-      y + v.y,
-      0.0,
-      1.0
-    ]);
+    return Mat2D.fromScaleAndTranslation(scale, scale, x + v.x, y + v.y);
   }
 
   Mat2D renderTransform(double x, double y) =>
@@ -453,6 +438,8 @@ class FontFeature {
   FontFeature(this.tag, this.value);
 }
 
+enum FontInitStatus { success, failed, alreadyInitialized }
+
 abstract class Font {
   // Variable axes available to the font.
   Iterable<FontAxis> get axes;
@@ -460,13 +447,27 @@ abstract class Font {
   Iterable<FontTag> get features;
 
   double axisValue(int axisTag);
-  static bool _initialized = false;
-  static Future<void> initialize() async {
-    if (_initialized) {
-      return;
+  static bool _initializing = false;
+  static FontInitStatus? _initStatus;
+  static final _initCompleter = Completer<FontInitStatus>();
+
+  static Future<FontInitStatus> initialize() {
+    if (_initCompleter.isCompleted && _initStatus == FontInitStatus.success) {
+      return Future.value(FontInitStatus.alreadyInitialized);
     }
-    _initialized = true;
-    return initFont();
+
+    if (!_initializing) {
+      _initializing = true;
+      initFont().then(
+        (value) {
+          _initStatus = value ? FontInitStatus.success : FontInitStatus.failed;
+          _initCompleter.complete(_initStatus);
+          _initializing = false;
+        },
+      );
+    }
+
+    return _initCompleter.future;
   }
 
   static Font? decode(Uint8List bytes) {
@@ -482,12 +483,21 @@ abstract class Font {
     setFallbackFonts(fonts);
   }
 
+  static void disableFallback() {
+    disableFallbackFonts();
+  }
+
+  static void enableFallback() {
+    enableFallbackFonts();
+  }
+
   RawPath getPath(int glyphId);
   void dispose();
 
   TextShapeResult shape(String text, List<TextRun> runs);
 
   final HashMap<int, ui.Path> _glyphPaths = HashMap<int, ui.Path>();
+
   ui.Path getUiPath(int glyphId) {
     var glyphPath = _glyphPaths[glyphId];
     if (glyphPath != null) {

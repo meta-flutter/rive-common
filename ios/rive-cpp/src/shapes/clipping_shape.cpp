@@ -47,7 +47,7 @@ StatusCode ClippingShape::onAddedClean(CoreContext* context)
                 if (component == m_Source)
                 {
                     auto shape = core->as<Shape>();
-                    shape->addDefaultPathSpace(PathSpace::World | PathSpace::Clipping);
+                    shape->addFlags(PathFlags::world | PathFlags::clipping);
                     m_Shapes.push_back(shape);
                     break;
                 }
@@ -99,7 +99,12 @@ void ClippingShape::update(ComponentDirt value)
         {
             if (!shape->isEmpty())
             {
-                m_RenderPath->addPath(shape->pathComposer()->worldPath(), identity);
+                auto path = shape->pathComposer()->worldPath();
+                if (path == nullptr)
+                {
+                    continue;
+                }
+                m_RenderPath->addPath(path, identity);
                 m_ClipRenderPath = m_RenderPath.get();
             }
         }

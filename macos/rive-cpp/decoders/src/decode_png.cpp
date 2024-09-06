@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <cassert>
 #include <string.h>
+#include <setjmp.h>
 
 struct EncodedImageBuffer
 {
@@ -40,6 +41,8 @@ std::unique_ptr<Bitmap> DecodePng(const uint8_t bytes[], size_t byteCount)
     png_infop info_ptr;
     png_uint_32 width, height;
     int bit_depth, color_type, interlace_type;
+    std::unique_ptr<uint8_t[]> pixelBuffer;
+    std::unique_ptr<png_bytep[]> rowsPointer;
 
     png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
 
@@ -54,6 +57,12 @@ std::unique_ptr<Bitmap> DecodePng(const uint8_t bytes[], size_t byteCount)
     {
         png_destroy_read_struct(&png_ptr, (png_infopp)NULL, (png_infopp)NULL);
         printf("DecodePng - libpng failed (png_create_info_struct).");
+        return nullptr;
+    }
+
+    if (setjmp(png_jmpbuf(png_ptr)))
+    {
+        png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
         return nullptr;
     }
 
@@ -73,69 +82,68 @@ std::unique_ptr<Bitmap> DecodePng(const uint8_t bytes[], size_t byteCount)
                  NULL,
                  NULL);
 
-    png_set_strip_16(png_ptr);
-
-    int bitDepth = 0;
-    if (color_type == PNG_COLOR_TYPE_PALETTE || color_type == PNG_COLOR_TYPE_RGB)
+    if (color_type == PNG_COLOR_TYPE_PALETTE ||
+        (color_type == PNG_COLOR_TYPE_GRAY && bit_depth < 8))
     {
+        // expand to 3 or 4 channels
         png_set_expand(png_ptr);
-        bitDepth = 24;
-        if (png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS))
+    }
+
+    png_bytep trns = 0;
+    int trnsCount = 0;
+    if (png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS))
+    {
+        png_get_tRNS(png_ptr, info_ptr, &trns, &trnsCount, 0);
+        png_set_expand(png_ptr);
+    }
+
+    if (bit_depth == 16)
+    {
+        png_set_strip_16(png_ptr);
+    }
+
+    if (color_type == PNG_COLOR_TYPE_GRAY || color_type == PNG_COLOR_TYPE_GRAY_ALPHA)
+    {
+        png_set_gray_to_rgb(png_ptr);
+    }
+
+    png_read_update_info(png_ptr, info_ptr);
+    uint8_t channels = png_get_channels(png_ptr, info_ptr);
+
+    size_t pixelBufferSize =
+        static_cast<size_t>(width) * static_cast<size_t>(height) * static_cast<size_t>(channels);
+    pixelBuffer = std::make_unique<uint8_t[]>(pixelBufferSize);
+    const uint8_t* pixelBufferEnd = pixelBuffer.get() + pixelBufferSize;
+
+    rowsPointer = std::make_unique<png_bytep[]>(height);
+    png_bytep* rows = rowsPointer.get();
+    size_t rowStride = (size_t)width * (size_t)channels;
+    uint8_t* rowWrite = pixelBuffer.get();
+    for (png_uint_32 row = 0; row < height; row++)
+    {
+        rows[row] = rowWrite;
+        rowWrite += rowStride;
+        if (rowWrite > pixelBufferEnd)
         {
-            png_set_expand(png_ptr);
-            bitDepth += 8;
+            // Read would overflow.
+            return nullptr;
         }
     }
-    else if (color_type == PNG_COLOR_TYPE_GRAY)
-    {
-        png_set_expand(png_ptr);
-        bitDepth = 8;
-    }
-    else if (color_type == PNG_COLOR_TYPE_GRAY_ALPHA)
-    {
-        png_set_expand(png_ptr);
-        png_set_gray_to_rgb(png_ptr);
-        bitDepth = 32;
-    }
-    else if (color_type == PNG_COLOR_TYPE_RGB_ALPHA)
-    {
-        png_set_expand(png_ptr);
-        bitDepth = 32;
-    }
-
-    int pixelBytes = bitDepth / 8;
-    auto pixelBuffer = new uint8_t[width * height * pixelBytes];
-
-    png_bytep* row_pointers = new png_bytep[height];
-
-    for (unsigned row = 0; row < height; row++)
-    {
-        unsigned int rIndex = row;
-        // if (flipY) {
-        //     rIndex = height - row - 1;
-        // }
-        row_pointers[rIndex] = pixelBuffer + (row * (width * pixelBytes));
-    }
-    png_read_image(png_ptr, row_pointers);
+    png_read_image(png_ptr, rows);
     png_read_end(png_ptr, info_ptr);
 
     png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp) nullptr);
 
-    delete[] row_pointers;
-
     Bitmap::PixelFormat pixelFormat;
-    assert(bitDepth == 32 || bitDepth == 24 || bitDepth == 8);
-    switch (bitDepth)
+    assert(channels == 3 || channels == 4);
+    switch (channels)
     {
-        case 32:
+        case 4:
             pixelFormat = Bitmap::PixelFormat::RGBA;
             break;
-        case 24:
+        case 3:
             pixelFormat = Bitmap::PixelFormat::RGB;
             break;
-        case 8:
-            pixelFormat = Bitmap::PixelFormat::R;
-            break;
     }
-    return std::make_unique<Bitmap>(width, height, pixelFormat, pixelBuffer);
+    return std::make_unique<Bitmap>(width, height, pixelFormat, std::move(pixelBuffer));
 }

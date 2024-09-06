@@ -1,7 +1,7 @@
 import 'dart:ui';
 
 import 'src/layout_engine_ffi.dart'
-    if (dart.library.html) 'src/layout_engine_wasm.dart';
+    if (dart.library.js_interop) 'src/layout_engine_wasm.dart';
 
 enum LayoutOverflow { visible, hidden, scroll }
 
@@ -81,7 +81,15 @@ enum LayoutUnit {
   undefined,
   point,
   percent,
-  auto,
+  auto;
+
+  bool get isPercent => this == LayoutUnit.percent;
+
+  bool get isInteractable =>
+      [LayoutUnit.point, LayoutUnit.percent].contains(this);
+
+  bool get isNotInteractable =>
+      [LayoutUnit.auto, LayoutUnit.undefined].contains(this);
 }
 
 enum LayoutEdge {
@@ -226,6 +234,10 @@ abstract class LayoutNode {
 
   void dispose();
 
+  static LayoutNode fromExternal(dynamic ref) {
+    return makeLayoutNodeExternal(ref);
+  }
+
   void setStyle(LayoutStyle style);
 
   LayoutNodeType get nodeType;
@@ -233,6 +245,7 @@ abstract class LayoutNode {
 
   void clearChildren();
   void insertChild(LayoutNode node, int index);
+  void removeChild(LayoutNode node);
 
   void calculateLayout(
       double availableWidth, double availableHeight, LayoutDirection direction);

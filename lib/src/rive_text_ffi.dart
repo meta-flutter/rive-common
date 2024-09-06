@@ -1,51 +1,15 @@
+// ignore_for_file: deprecated_member_use
+
 import 'dart:collection';
 import 'dart:ffi';
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:ffi/ffi.dart';
 import 'package:rive_common/math.dart';
-import 'package:rive_common/platform.dart' as rive;
 import 'package:rive_common/rive_text.dart';
+import 'package:rive_common/src/dynamic_library_helper.dart';
 
-final DynamicLibrary nativeLib = _loadLibrary();
-
-DynamicLibrary _loadLibrary() {
-  // TODO: (Max) build and load librive_text.so for peon
-  if (rive.Platform.instance.isTesting || true) {
-    var paths = [
-      '',
-      '../../packages/rive_common/',
-    ];
-    if (Platform.isMacOS) {
-      for (final path in paths) {
-        try {
-          return DynamicLibrary.open(
-            '${path}shared_lib/build/bin/debug/librive_text.dylib',
-          );
-
-          // ignore: avoid_catching_errors
-        } on ArgumentError catch (_) {}
-      }
-    } else if (Platform.isLinux) {
-      for (final path in paths) {
-        try {
-          return DynamicLibrary.open(
-            '${path}shared_lib/build/bin/debug/librive_text.so',
-          );
-          // ignore: avoid_catching_errors
-        } on ArgumentError catch (_) {}
-      }
-    }
-  }
-
-  if (Platform.isAndroid) {
-    return DynamicLibrary.open('librive_text.so');
-  } else if (Platform.isWindows) {
-    return DynamicLibrary.open('rive_common_plugin.dll');
-  }
-  return DynamicLibrary.process();
-}
+DynamicLibrary get _nativeLib => RiveDynamicLibraryHelper.nativeLib;
 
 class FontAxisStruct extends Struct implements FontAxis {
   @override
@@ -148,37 +112,37 @@ class GlyphLineFFI extends GlyphLine {
 
 class SimpleLineList extends Struct {
   external Pointer<GlyphLineNative> data;
-  @Uint64()
+  @Size()
   external int size;
 }
 
 class SimpleLineDoubleList extends Struct {
   external Pointer<SimpleLineList> data;
-  @Uint64()
+  @Size()
   external int size;
 }
 
 class SimpleUint16Array extends Struct {
   external Pointer<Uint16> data;
-  @Uint64()
+  @Size()
   external int size;
 }
 
 class SimpleUint32Array extends Struct {
   external Pointer<Uint32> data;
-  @Uint64()
+  @Size()
   external int size;
 }
 
 class SimpleFloatArray extends Struct {
   external Pointer<Float> data;
-  @Uint64()
+  @Size()
   external int size;
 }
 
 class SimpleVec2DArray extends Struct {
   external Pointer<PathPoint> data;
-  @Uint64()
+  @Size()
   external int size;
 }
 
@@ -216,7 +180,7 @@ class FontFeatureNative extends Struct {
 
 class SimpleGlyphRunArray extends Struct {
   external Pointer<GlyphRunNative> data;
-  @Uint64()
+  @Size()
   external int size;
 
   List<GlyphRunNative> toList() {
@@ -287,7 +251,7 @@ class GlyphRunNative extends Struct implements GlyphRun {
 
 class DynamicTextRunArray extends Struct {
   external Pointer<GlyphRunNative> data;
-  @Uint64()
+  @Size()
   external int size;
 }
 
@@ -299,7 +263,7 @@ class ParagraphNative extends Struct {
 
 class SimpleParagraphArray extends Struct {
   external Pointer<ParagraphNative> data;
-  @Uint64()
+  @Size()
   external int size;
 
   List<Paragraph> toList() {
@@ -313,7 +277,7 @@ class SimpleParagraphArray extends Struct {
 
 class SimpleTagArray extends Struct {
   external Pointer<Uint32> data;
-  @Uint64()
+  @Size()
   external int size;
 
   List<TagFFI> toList() {
@@ -327,7 +291,7 @@ class SimpleTagArray extends Struct {
 
 class SimpleAxisArray extends Struct {
   external Pointer<FontAxisStruct> data;
-  @Uint64()
+  @Size()
   external int size;
 
   List<FontAxis> toList() {
@@ -445,7 +409,7 @@ class TextShapeResultFFI extends TextShapeResult {
 
 final Pointer<SimpleParagraphArray> Function(Pointer<Uint32> text,
         int textLength, Pointer<TextRunNative> runs, int runsLength) shapeText =
-    nativeLib
+    _nativeLib
         .lookup<
             NativeFunction<
                 Pointer<SimpleParagraphArray> Function(Pointer<Uint32>, Uint64,
@@ -454,15 +418,16 @@ final Pointer<SimpleParagraphArray> Function(Pointer<Uint32> text,
 
 final Pointer<SimpleTagArray> Function(
     Pointer<Void>
-        font) fontFeatures = nativeLib
+        font) fontFeatures = _nativeLib
     .lookup<NativeFunction<Pointer<SimpleTagArray> Function(Pointer<Void>)>>(
         'fontFeatures')
     .asFunction();
 
-final void Function(Pointer<SimpleTagArray> tags) deleteFontFeatures = nativeLib
-    .lookup<NativeFunction<Void Function(Pointer<SimpleTagArray>)>>(
-        'deleteFontFeatures')
-    .asFunction();
+final void Function(Pointer<SimpleTagArray> tags) deleteFontFeatures =
+    _nativeLib
+        .lookup<NativeFunction<Void Function(Pointer<SimpleTagArray>)>>(
+            'deleteFontFeatures')
+        .asFunction();
 
 final Pointer<Void> Function(
   Pointer<Void> font,
@@ -470,7 +435,7 @@ final Pointer<Void> Function(
   int coordsLength,
   Pointer<FontFeatureNative> features,
   int featuresLength,
-) makeFontWithOptions = nativeLib
+) makeFontWithOptions = _nativeLib
     .lookup<
         NativeFunction<
             Pointer<Void> Function(
@@ -483,79 +448,87 @@ final Pointer<Void> Function(
     .asFunction();
 
 final void Function(Pointer<SimpleParagraphArray> font) deleteShapeResult =
-    nativeLib
+    _nativeLib
         .lookup<NativeFunction<Void Function(Pointer<SimpleParagraphArray>)>>(
             'deleteShapeResult')
         .asFunction();
 
 final Pointer<SimpleLineDoubleList> Function(
         Pointer<SimpleParagraphArray>, double width, int align)
-    breakLinesNative = nativeLib
+    breakLinesNative = _nativeLib
         .lookup<
             NativeFunction<
                 Pointer<SimpleLineDoubleList> Function(
                     Pointer<SimpleParagraphArray>, Float, Uint8)>>('breakLines')
         .asFunction();
 
-final void Function(Pointer<SimpleLineDoubleList>) deleteLines = nativeLib
+final void Function(Pointer<SimpleLineDoubleList>) deleteLines = _nativeLib
     .lookup<NativeFunction<Void Function(Pointer<SimpleLineDoubleList>)>>(
         'deleteLines')
     .asFunction();
 
 final Pointer<Void> Function(Pointer<Uint8> bytes, int count) makeFont =
-    nativeLib
+    _nativeLib
         .lookup<NativeFunction<Pointer<Void> Function(Pointer<Uint8>, Uint64)>>(
             'makeFont')
         .asFunction();
 
-final void Function(Pointer<Void> font) deleteFont = nativeLib
+final void Function(Pointer<Void> font) deleteFont = _nativeLib
     .lookup<NativeFunction<Void Function(Pointer<Void>)>>('deleteFont')
     .asFunction();
 
 final GlyphPathStruct Function(
     Pointer<Void> font,
     int
-        glyphId) makeGlyphPath = nativeLib
+        glyphId) makeGlyphPath = _nativeLib
     .lookup<NativeFunction<GlyphPathStruct Function(Pointer<Void>, Uint16)>>(
         'makeGlyphPath')
     .asFunction();
 
-final void Function(Pointer<Void> font) deleteGlyphPath = nativeLib
+final void Function(Pointer<Void> font) deleteGlyphPath = _nativeLib
     .lookup<NativeFunction<Void Function(Pointer<Void>)>>('deleteGlyphPath')
     .asFunction();
 
 final void Function() init =
-    nativeLib.lookup<NativeFunction<Void Function()>>('init').asFunction();
+    _nativeLib.lookup<NativeFunction<Void Function()>>('init').asFunction();
+
+final void Function() disableFallbackFonts = _nativeLib
+    .lookup<NativeFunction<Void Function()>>('disableFallbackFonts')
+    .asFunction();
+
+final void Function() enableFallbackFonts = _nativeLib
+    .lookup<NativeFunction<Void Function()>>('enableFallbackFonts')
+    .asFunction();
 
 final Pointer<SimpleParagraphArray> Function(
         Pointer<Pointer<Void>> fonts, int fontsLength) setFallbackFontsNative =
-    nativeLib
+    _nativeLib
         .lookup<
             NativeFunction<
                 Pointer<SimpleParagraphArray> Function(
                     Pointer<Pointer<Void>>, Uint64)>>('setFallbackFonts')
         .asFunction();
 
-final int Function(Pointer<Void> font) fontAxisCount = nativeLib
+final int Function(Pointer<Void> font) fontAxisCount = _nativeLib
     .lookup<NativeFunction<Uint16 Function(Pointer<Void>)>>('fontAxisCount')
     .asFunction();
 
 final FontAxisStruct Function(Pointer<Void> font, int index) fontAxis =
-    nativeLib
+    _nativeLib
         .lookup<NativeFunction<FontAxisStruct Function(Pointer<Void>, Uint16)>>(
             'fontAxis')
         .asFunction();
 
-final double Function(Pointer<Void> font, int axis) fontAxisValue = nativeLib
+final double Function(Pointer<Void> font, int axis) fontAxisValue = _nativeLib
     .lookup<NativeFunction<Float Function(Pointer<Void>, Uint32)>>(
         'fontAxisValue')
     .asFunction();
 
-final double Function(Pointer<Void> font) fontAscent = nativeLib
+final double Function(Pointer<Void> font) fontAscent = _nativeLib
     .lookup<NativeFunction<Float Function(Pointer<Void>)>>('fontAscent')
     .asFunction();
 
-final double Function(Pointer<Void> font) fontDescent = nativeLib
+final double Function(Pointer<Void> font) fontDescent = _nativeLib
     .lookup<NativeFunction<Float Function(Pointer<Void>)>>('fontDescent')
     .asFunction();
 
@@ -833,8 +806,9 @@ Font? decodeFont(Uint8List bytes) {
   return StrongFontFFI(result);
 }
 
-Future<void> initFont() async {
+Future<bool> initFont() async {
   init();
+  return true;
 }
 
 void setFallbackFonts(List<Font> fonts) {

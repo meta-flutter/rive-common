@@ -639,7 +639,20 @@ void yogaNodeInsertChild(WasmPtr nodePtr, WasmPtr childPtr, int index)
     {
         return;
     }
-    YGNodeInsertChild(node, child, index);
+    node->insertChild(child, index);
+    child->setOwner(node);
+    node->markDirtyAndPropagate();
+}
+
+void yogaNodeRemoveChild(WasmPtr nodePtr, WasmPtr childPtr)
+{
+    YGNode* node = (YGNode*)nodePtr;
+    YGNode* child = (YGNode*)childPtr;
+    if (node == nullptr || child == nullptr)
+    {
+        return;
+    }
+    YGNodeRemoveChild(node, child);
 }
 
 void yogaNodeClearChildren(WasmPtr nodePtr)
@@ -649,7 +662,7 @@ void yogaNodeClearChildren(WasmPtr nodePtr)
     {
         return;
     }
-    node->clearChildren();
+    YGNodeRemoveAllChildren(node);
 }
 
 void yogaNodeSetStyle(WasmPtr nodePtr, WasmPtr stylePtr)
@@ -759,4 +772,5 @@ EMSCRIPTEN_BINDINGS(LayoutEngine)
     function("yogaNodeSetStyle", &yogaNodeSetStyle);
     function("yogaNodeGetType", &yogaNodeGetType);
     function("yogaNodeSetType", &yogaNodeSetType);
+    function("yogaNodeRemoveChild", &yogaNodeRemoveChild);
 }
