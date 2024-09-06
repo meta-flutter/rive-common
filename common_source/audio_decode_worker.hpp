@@ -80,8 +80,11 @@ public:
     {
         rcp<DecodeWork> work(new DecodeWork(reader));
 
-        std::unique_lock<std::mutex> lock(m_mutex);
-        m_work.push_back(work);
+        {
+            std::unique_lock<std::mutex> lock(m_mutex);
+            m_work.push_back(work);
+        }
+        m_haveWork.notify_all();
         return work;
     }
 

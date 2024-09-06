@@ -4,6 +4,8 @@ set -ex
 
 # Build the wasm and js files that will be released.
 ./build_wasm.sh clean release
+./build_wasm.sh clean simd release
+./build_wasm.sh clean simd threads release
 
 # Make sure tests succeed.
 npm test

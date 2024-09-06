@@ -14,11 +14,11 @@ project(${PROJECT_NAME} LANGUAGES CXX C)
 set(PLUGIN_NAME "rive_common_plugin")
 
 set(CMAKE_CXX_FLAGS
-    "${CMAKE_CXX_FLAGS} -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-undef -Wno-unsafe-buffer-usage -Wno-deprecated-copy-with-user-provided-dtor -Wno-documentation -Wno-documentation-pedantic -Wno-documentation-unknown-command -Wno-double-promotion -Wno-exit-time-destructors -Wno-float-equal -Wno-global-constructors -Wno-implicit-float-conversion -Wno-newline-eof -Wno-old-style-cast -Wno-reserved-identifier -Wno-shadow -Wno-sign-compare -Wno-sign-conversion -Wno-unused-function -Wno-unused-macros -Wno-unused-variable -Wno-unused-parameter -Wno-switch-enum -Wno-missing-field-initializers -DWITH_RIVE_TEXT -DWITH_RIVE_AUDIO -DHAVE_OT  -DHB_NO_FALLBACK_SHAPE  -DHB_NO_WIN1256  -DHB_NO_EXTERN_HELPERS -DSB_CONFIG_UNITY -Wno-tautological-constant-out-of-range-compare -D_CRT_SECURE_NO_WARNINGS -DYOGA_EXPORT="
+    "${CMAKE_CXX_FLAGS} -DNOMINMAX -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-undef -Wno-unsafe-buffer-usage -Wno-deprecated-copy-with-user-provided-dtor -Wno-documentation -Wno-documentation-pedantic -Wno-documentation-unknown-command -Wno-double-promotion -Wno-exit-time-destructors -Wno-float-equal -Wno-global-constructors -Wno-implicit-float-conversion -Wno-newline-eof -Wno-old-style-cast -Wno-reserved-identifier -Wno-shadow -Wno-sign-compare -Wno-sign-conversion -Wno-unused-function -Wno-unused-macros -Wno-unused-variable -Wno-unused-parameter -Wno-switch-enum -Wno-missing-field-initializers -DWITH_RIVE_TEXT -DWITH_RIVE_AUDIO_TOOLS -DWITH_RIVE_AUDIO -DMA_NO_RESOURCE_MANAGER -DHAVE_OT  -DHB_NO_FALLBACK_SHAPE  -DHB_NO_WIN1256  -DHB_NO_EXTERN_HELPERS -DHB_NO_BUFFER_VERIFY -DHB_NO_BUFFER_MESSAGE -DHB_NO_PAINT -DHB_NO_MMAP -DHB_NO_META -DSB_CONFIG_UNITY -Wno-tautological-constant-out-of-range-compare -D_CRT_SECURE_NO_WARNINGS -DYOGA_EXPORT="
 )
 
 set(CMAKE_C_FLAGS
-    "${CMAKE_C_FLAGS} -DSB_CONFIG_UNITY -Wno-unused-function -Wno-undef -Wno-unused-variable -Wno-unused-parameter -Wno-unsafe-buffer-usage -Wno-tautological-constant-out-of-range-compare  -D_CRT_SECURE_NO_WARNINGS"
+    "${CMAKE_C_FLAGS} -DNOMINMAX -DSB_CONFIG_UNITY -Wno-unused-function -Wno-undef -Wno-unused-variable -Wno-unused-parameter -Wno-unsafe-buffer-usage -Wno-tautological-constant-out-of-range-compare  -D_CRT_SECURE_NO_WARNINGS"
 )
 
 # Any new source files that you add to the plugin should be added here.

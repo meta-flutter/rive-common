@@ -22,7 +22,14 @@ class RivePlugin: FlutterPlugin, MethodCallHandler {
   }
 
   override fun onMethodCall(@NonNull call: MethodCall, @NonNull result: Result) {
-    if (call.method == "getPlatformVersion") {
+    if (call.method == "loadRiveLibrary") {
+      try {
+        System.loadLibrary("rive_text")
+        result.success(null)
+      } catch (e: Throwable) {
+        result.error(e.toString(), null, null)
+      }
+    } else if (call.method == "getPlatformVersion") {
       result.success("Android ${android.os.Build.VERSION.RELEASE}")
     } else {
       result.notImplemented()

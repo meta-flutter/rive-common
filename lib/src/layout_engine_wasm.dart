@@ -1,154 +1,157 @@
 import 'dart:collection';
-import 'dart:js' as js;
+import 'dart:js_interop' as js;
+import 'dart:js_interop_unsafe';
 import 'dart:typed_data';
 
 import 'package:rive_common/layout_engine.dart';
 
-late js.JsFunction _makeYogaStyle;
-late js.JsFunction _disposeYogaStyle;
-late js.JsFunction _yogaStyleGetAlignContent;
-late js.JsFunction _yogaStyleSetAlignContent;
-late js.JsFunction _yogaStyleGetDirection;
-late js.JsFunction _yogaStyleSetDirection;
-late js.JsFunction _yogaStyleGetFlexDirection;
-late js.JsFunction _yogaStyleSetFlexDirection;
-late js.JsFunction _yogaStyleGetJustifyContent;
-late js.JsFunction _yogaStyleSetJustifyContent;
-late js.JsFunction _yogaStyleGetAlignItems;
-late js.JsFunction _yogaStyleSetAlignItems;
-late js.JsFunction _yogaStyleGetAlignSelf;
-late js.JsFunction _yogaStyleSetAlignSelf;
-late js.JsFunction _yogaStyleGetPositionType;
-late js.JsFunction _yogaStyleSetPositionType;
-late js.JsFunction _yogaStyleGetFlexWrap;
-late js.JsFunction _yogaStyleSetFlexWrap;
-late js.JsFunction _yogaStyleGetOverflow;
-late js.JsFunction _yogaStyleSetOverflow;
-late js.JsFunction _yogaStyleGetDisplay;
-late js.JsFunction _yogaStyleSetDisplay;
-late js.JsFunction _yogaStyleGetFlex;
-late js.JsFunction _yogaStyleSetFlex;
-late js.JsFunction _yogaStyleGetFlexGrow;
-late js.JsFunction _yogaStyleSetFlexGrow;
-late js.JsFunction _yogaStyleGetFlexShrink;
-late js.JsFunction _yogaStyleSetFlexShrink;
-late js.JsFunction _yogaStyleGetFlexBasis;
-late js.JsFunction _yogaStyleSetFlexBasis;
-late js.JsFunction _yogaStyleGetMargin;
-late js.JsFunction _yogaStyleSetMargin;
-late js.JsFunction _yogaStyleGetPosition;
-late js.JsFunction _yogaStyleSetPosition;
-late js.JsFunction _yogaStyleGetPadding;
-late js.JsFunction _yogaStyleSetPadding;
-late js.JsFunction _yogaStyleGetBorder;
-late js.JsFunction _yogaStyleSetBorder;
-late js.JsFunction _yogaStyleGetGap;
-late js.JsFunction _yogaStyleSetGap;
-late js.JsFunction _yogaStyleGetDimension;
-late js.JsFunction _yogaStyleSetDimension;
-late js.JsFunction _yogaStyleGetMinDimension;
-late js.JsFunction _yogaStyleSetMinDimension;
-late js.JsFunction _yogaStyleGetMaxDimension;
-late js.JsFunction _yogaStyleSetMaxDimension;
-late js.JsFunction _makeYogaNode;
-late js.JsFunction _disposeYogaNode;
-late js.JsFunction _yogaNodeCalculateLayout;
-late js.JsFunction _yogaNodeGetLayout;
-late js.JsFunction _yogaNodeSetMeasureFunc;
-late js.JsFunction _yogaNodeClearMeasureFunc;
-late js.JsFunction _yogaNodeSetBaselineFunc;
-late js.JsFunction _yogaNodeClearBaselineFunc;
-late js.JsFunction _yogaNodeMarkDirty;
-late js.JsFunction _yogaNodeInsertChild;
-late js.JsFunction _yogaNodeClearChildren;
-late js.JsFunction _yogaNodeSetStyle;
-late js.JsFunction _yogaNodeGetType;
-late js.JsFunction _yogaNodeSetType;
+late js.JSFunction _makeYogaStyle;
+late js.JSFunction _disposeYogaStyle;
+late js.JSFunction _yogaStyleGetAlignContent;
+late js.JSFunction _yogaStyleSetAlignContent;
+late js.JSFunction _yogaStyleGetDirection;
+late js.JSFunction _yogaStyleSetDirection;
+late js.JSFunction _yogaStyleGetFlexDirection;
+late js.JSFunction _yogaStyleSetFlexDirection;
+late js.JSFunction _yogaStyleGetJustifyContent;
+late js.JSFunction _yogaStyleSetJustifyContent;
+late js.JSFunction _yogaStyleGetAlignItems;
+late js.JSFunction _yogaStyleSetAlignItems;
+late js.JSFunction _yogaStyleGetAlignSelf;
+late js.JSFunction _yogaStyleSetAlignSelf;
+late js.JSFunction _yogaStyleGetPositionType;
+late js.JSFunction _yogaStyleSetPositionType;
+late js.JSFunction _yogaStyleGetFlexWrap;
+late js.JSFunction _yogaStyleSetFlexWrap;
+late js.JSFunction _yogaStyleGetOverflow;
+late js.JSFunction _yogaStyleSetOverflow;
+late js.JSFunction _yogaStyleGetDisplay;
+late js.JSFunction _yogaStyleSetDisplay;
+late js.JSFunction _yogaStyleGetFlex;
+late js.JSFunction _yogaStyleSetFlex;
+late js.JSFunction _yogaStyleGetFlexGrow;
+late js.JSFunction _yogaStyleSetFlexGrow;
+late js.JSFunction _yogaStyleGetFlexShrink;
+late js.JSFunction _yogaStyleSetFlexShrink;
+late js.JSFunction _yogaStyleGetFlexBasis;
+late js.JSFunction _yogaStyleSetFlexBasis;
+late js.JSFunction _yogaStyleGetMargin;
+late js.JSFunction _yogaStyleSetMargin;
+late js.JSFunction _yogaStyleGetPosition;
+late js.JSFunction _yogaStyleSetPosition;
+late js.JSFunction _yogaStyleGetPadding;
+late js.JSFunction _yogaStyleSetPadding;
+late js.JSFunction _yogaStyleGetBorder;
+late js.JSFunction _yogaStyleSetBorder;
+late js.JSFunction _yogaStyleGetGap;
+late js.JSFunction _yogaStyleSetGap;
+late js.JSFunction _yogaStyleGetDimension;
+late js.JSFunction _yogaStyleSetDimension;
+late js.JSFunction _yogaStyleGetMinDimension;
+late js.JSFunction _yogaStyleSetMinDimension;
+late js.JSFunction _yogaStyleGetMaxDimension;
+late js.JSFunction _yogaStyleSetMaxDimension;
+late js.JSFunction _makeYogaNode;
+late js.JSFunction _disposeYogaNode;
+late js.JSFunction _yogaNodeCalculateLayout;
+late js.JSFunction _yogaNodeGetLayout;
+late js.JSFunction _yogaNodeSetMeasureFunc;
+late js.JSFunction _yogaNodeClearMeasureFunc;
+late js.JSFunction _yogaNodeSetBaselineFunc;
+late js.JSFunction _yogaNodeClearBaselineFunc;
+late js.JSFunction _yogaNodeMarkDirty;
+late js.JSFunction _yogaNodeInsertChild;
+late js.JSFunction _yogaNodeRemoveChild;
+late js.JSFunction _yogaNodeClearChildren;
+late js.JSFunction _yogaNodeSetStyle;
+late js.JSFunction _yogaNodeGetType;
+late js.JSFunction _yogaNodeSetType;
 
 // ignore: avoid_classes_with_only_static_members
 class LayoutEngineWasm {
-  static void initWasmModule(js.JsObject module) {
-    _makeYogaStyle = module['makeYogaStyle'] as js.JsFunction;
-    _disposeYogaStyle = module['disposeYogaStyle'] as js.JsFunction;
+  static void initWasmModule(js.JSObject module) {
+    _makeYogaStyle = module['makeYogaStyle'] as js.JSFunction;
+    _disposeYogaStyle = module['disposeYogaStyle'] as js.JSFunction;
     _yogaStyleGetAlignContent =
-        module['yogaStyleGetAlignContent'] as js.JsFunction;
+        module['yogaStyleGetAlignContent'] as js.JSFunction;
     _yogaStyleSetAlignContent =
-        module['yogaStyleSetAlignContent'] as js.JsFunction;
-    _yogaStyleGetDirection = module['yogaStyleGetDirection'] as js.JsFunction;
-    _yogaStyleSetDirection = module['yogaStyleSetDirection'] as js.JsFunction;
+        module['yogaStyleSetAlignContent'] as js.JSFunction;
+    _yogaStyleGetDirection = module['yogaStyleGetDirection'] as js.JSFunction;
+    _yogaStyleSetDirection = module['yogaStyleSetDirection'] as js.JSFunction;
     _yogaStyleGetFlexDirection =
-        module['yogaStyleGetFlexDirection'] as js.JsFunction;
+        module['yogaStyleGetFlexDirection'] as js.JSFunction;
     _yogaStyleSetFlexDirection =
-        module['yogaStyleSetFlexDirection'] as js.JsFunction;
+        module['yogaStyleSetFlexDirection'] as js.JSFunction;
     _yogaStyleGetJustifyContent =
-        module['yogaStyleGetJustifyContent'] as js.JsFunction;
+        module['yogaStyleGetJustifyContent'] as js.JSFunction;
     _yogaStyleSetJustifyContent =
-        module['yogaStyleSetJustifyContent'] as js.JsFunction;
-    _yogaStyleGetAlignItems = module['yogaStyleGetAlignItems'] as js.JsFunction;
-    _yogaStyleSetAlignItems = module['yogaStyleSetAlignItems'] as js.JsFunction;
-    _yogaStyleGetAlignSelf = module['yogaStyleGetAlignSelf'] as js.JsFunction;
-    _yogaStyleSetAlignSelf = module['yogaStyleSetAlignSelf'] as js.JsFunction;
+        module['yogaStyleSetJustifyContent'] as js.JSFunction;
+    _yogaStyleGetAlignItems = module['yogaStyleGetAlignItems'] as js.JSFunction;
+    _yogaStyleSetAlignItems = module['yogaStyleSetAlignItems'] as js.JSFunction;
+    _yogaStyleGetAlignSelf = module['yogaStyleGetAlignSelf'] as js.JSFunction;
+    _yogaStyleSetAlignSelf = module['yogaStyleSetAlignSelf'] as js.JSFunction;
     _yogaStyleGetPositionType =
-        module['yogaStyleGetPositionType'] as js.JsFunction;
+        module['yogaStyleGetPositionType'] as js.JSFunction;
     _yogaStyleSetPositionType =
-        module['yogaStyleSetPositionType'] as js.JsFunction;
-    _yogaStyleGetFlexWrap = module['yogaStyleGetFlexWrap'] as js.JsFunction;
-    _yogaStyleSetFlexWrap = module['yogaStyleSetFlexWrap'] as js.JsFunction;
-    _yogaStyleGetOverflow = module['yogaStyleGetOverflow'] as js.JsFunction;
-    _yogaStyleSetOverflow = module['yogaStyleSetOverflow'] as js.JsFunction;
-    _yogaStyleGetDisplay = module['yogaStyleGetDisplay'] as js.JsFunction;
-    _yogaStyleSetDisplay = module['yogaStyleSetDisplay'] as js.JsFunction;
-    _yogaStyleGetFlex = module['yogaStyleGetFlex'] as js.JsFunction;
-    _yogaStyleSetFlex = module['yogaStyleSetFlex'] as js.JsFunction;
-    _yogaStyleGetFlexGrow = module['yogaStyleGetFlexGrow'] as js.JsFunction;
-    _yogaStyleSetFlexGrow = module['yogaStyleSetFlexGrow'] as js.JsFunction;
-    _yogaStyleGetFlexShrink = module['yogaStyleGetFlexShrink'] as js.JsFunction;
-    _yogaStyleSetFlexShrink = module['yogaStyleSetFlexShrink'] as js.JsFunction;
-    _yogaStyleGetFlexBasis = module['yogaStyleGetFlexBasis'] as js.JsFunction;
-    _yogaStyleSetFlexBasis = module['yogaStyleSetFlexBasis'] as js.JsFunction;
-    _yogaStyleGetMargin = module['yogaStyleGetMargin'] as js.JsFunction;
-    _yogaStyleSetMargin = module['yogaStyleSetMargin'] as js.JsFunction;
-    _yogaStyleGetPosition = module['yogaStyleGetPosition'] as js.JsFunction;
-    _yogaStyleSetPosition = module['yogaStyleSetPosition'] as js.JsFunction;
-    _yogaStyleGetPadding = module['yogaStyleGetPadding'] as js.JsFunction;
-    _yogaStyleSetPadding = module['yogaStyleSetPadding'] as js.JsFunction;
-    _yogaStyleGetBorder = module['yogaStyleGetBorder'] as js.JsFunction;
-    _yogaStyleSetBorder = module['yogaStyleSetBorder'] as js.JsFunction;
-    _yogaStyleGetGap = module['yogaStyleGetGap'] as js.JsFunction;
-    _yogaStyleSetGap = module['yogaStyleSetGap'] as js.JsFunction;
-    _yogaStyleGetDimension = module['yogaStyleGetDimension'] as js.JsFunction;
-    _yogaStyleSetDimension = module['yogaStyleSetDimension'] as js.JsFunction;
+        module['yogaStyleSetPositionType'] as js.JSFunction;
+    _yogaStyleGetFlexWrap = module['yogaStyleGetFlexWrap'] as js.JSFunction;
+    _yogaStyleSetFlexWrap = module['yogaStyleSetFlexWrap'] as js.JSFunction;
+    _yogaStyleGetOverflow = module['yogaStyleGetOverflow'] as js.JSFunction;
+    _yogaStyleSetOverflow = module['yogaStyleSetOverflow'] as js.JSFunction;
+    _yogaStyleGetDisplay = module['yogaStyleGetDisplay'] as js.JSFunction;
+    _yogaStyleSetDisplay = module['yogaStyleSetDisplay'] as js.JSFunction;
+    _yogaStyleGetFlex = module['yogaStyleGetFlex'] as js.JSFunction;
+    _yogaStyleSetFlex = module['yogaStyleSetFlex'] as js.JSFunction;
+    _yogaStyleGetFlexGrow = module['yogaStyleGetFlexGrow'] as js.JSFunction;
+    _yogaStyleSetFlexGrow = module['yogaStyleSetFlexGrow'] as js.JSFunction;
+    _yogaStyleGetFlexShrink = module['yogaStyleGetFlexShrink'] as js.JSFunction;
+    _yogaStyleSetFlexShrink = module['yogaStyleSetFlexShrink'] as js.JSFunction;
+    _yogaStyleGetFlexBasis = module['yogaStyleGetFlexBasis'] as js.JSFunction;
+    _yogaStyleSetFlexBasis = module['yogaStyleSetFlexBasis'] as js.JSFunction;
+    _yogaStyleGetMargin = module['yogaStyleGetMargin'] as js.JSFunction;
+    _yogaStyleSetMargin = module['yogaStyleSetMargin'] as js.JSFunction;
+    _yogaStyleGetPosition = module['yogaStyleGetPosition'] as js.JSFunction;
+    _yogaStyleSetPosition = module['yogaStyleSetPosition'] as js.JSFunction;
+    _yogaStyleGetPadding = module['yogaStyleGetPadding'] as js.JSFunction;
+    _yogaStyleSetPadding = module['yogaStyleSetPadding'] as js.JSFunction;
+    _yogaStyleGetBorder = module['yogaStyleGetBorder'] as js.JSFunction;
+    _yogaStyleSetBorder = module['yogaStyleSetBorder'] as js.JSFunction;
+    _yogaStyleGetGap = module['yogaStyleGetGap'] as js.JSFunction;
+    _yogaStyleSetGap = module['yogaStyleSetGap'] as js.JSFunction;
+    _yogaStyleGetDimension = module['yogaStyleGetDimension'] as js.JSFunction;
+    _yogaStyleSetDimension = module['yogaStyleSetDimension'] as js.JSFunction;
     _yogaStyleGetMinDimension =
-        module['yogaStyleGetMinDimension'] as js.JsFunction;
+        module['yogaStyleGetMinDimension'] as js.JSFunction;
     _yogaStyleSetMinDimension =
-        module['yogaStyleSetMinDimension'] as js.JsFunction;
+        module['yogaStyleSetMinDimension'] as js.JSFunction;
     _yogaStyleGetMaxDimension =
-        module['yogaStyleGetMaxDimension'] as js.JsFunction;
+        module['yogaStyleGetMaxDimension'] as js.JSFunction;
     _yogaStyleSetMaxDimension =
-        module['yogaStyleSetMaxDimension'] as js.JsFunction;
-    _makeYogaNode = module['makeYogaNode'] as js.JsFunction;
-    _disposeYogaNode = module['disposeYogaNode'] as js.JsFunction;
+        module['yogaStyleSetMaxDimension'] as js.JSFunction;
+    _makeYogaNode = module['makeYogaNode'] as js.JSFunction;
+    _disposeYogaNode = module['disposeYogaNode'] as js.JSFunction;
     _yogaNodeCalculateLayout =
-        module['yogaNodeCalculateLayout'] as js.JsFunction;
-    _yogaNodeGetLayout = module['yogaNodeGetLayout'] as js.JsFunction;
-    _yogaNodeSetMeasureFunc = module['yogaNodeSetMeasureFunc'] as js.JsFunction;
+        module['yogaNodeCalculateLayout'] as js.JSFunction;
+    _yogaNodeGetLayout = module['yogaNodeGetLayout'] as js.JSFunction;
+    _yogaNodeSetMeasureFunc = module['yogaNodeSetMeasureFunc'] as js.JSFunction;
     _yogaNodeClearMeasureFunc =
-        module['yogaNodeClearMeasureFunc'] as js.JsFunction;
+        module['yogaNodeClearMeasureFunc'] as js.JSFunction;
     _yogaNodeSetBaselineFunc =
-        module['yogaNodeSetBaselineFunc'] as js.JsFunction;
+        module['yogaNodeSetBaselineFunc'] as js.JSFunction;
     _yogaNodeClearBaselineFunc =
-        module['yogaNodeClearBaselineFunc'] as js.JsFunction;
-    _yogaNodeMarkDirty = module['yogaNodeMarkDirty'] as js.JsFunction;
-    _yogaNodeInsertChild = module['yogaNodeInsertChild'] as js.JsFunction;
-    _yogaNodeClearChildren = module['yogaNodeClearChildren'] as js.JsFunction;
-    _yogaNodeSetStyle = module['yogaNodeSetStyle'] as js.JsFunction;
-    _yogaNodeGetType = module['yogaNodeGetType'] as js.JsFunction;
-    _yogaNodeSetType = module['yogaNodeSetType'] as js.JsFunction;
+        module['yogaNodeClearBaselineFunc'] as js.JSFunction;
+    _yogaNodeMarkDirty = module['yogaNodeMarkDirty'] as js.JSFunction;
+    _yogaNodeInsertChild = module['yogaNodeInsertChild'] as js.JSFunction;
+    _yogaNodeRemoveChild = module['yogaNodeRemoveChild'] as js.JSFunction;
+    _yogaNodeClearChildren = module['yogaNodeClearChildren'] as js.JSFunction;
+    _yogaNodeSetStyle = module['yogaNodeSetStyle'] as js.JSFunction;
+    _yogaNodeGetType = module['yogaNodeGetType'] as js.JSFunction;
+    _yogaNodeSetType = module['yogaNodeSetType'] as js.JSFunction;
   }
 }
 
 LayoutValue _layoutValueFromJs(dynamic data) {
-  if (data is js.JsObject) {
+  if (data is js.JSObject) {
     return LayoutValue(
       value: data['value'] as double,
       unit: LayoutUnit.values[data['unit'] as int],
@@ -171,99 +174,132 @@ class _LayoutWasm extends Layout {
 }
 
 class LayoutStyleWasm extends LayoutStyle {
+  static final Finalizer<int> _finalizer = Finalizer(
+    (nativePtr) => _disposeYogaStyle.callAsFunction(
+      null,
+      nativePtr.toJS,
+    ),
+  );
   int _nativePtr;
 
-  LayoutStyleWasm(this._nativePtr);
-
-  @override
-  void dispose() {
-    _disposeYogaStyle.apply(<dynamic>[_nativePtr]);
-    _nativePtr = 0;
+  LayoutStyleWasm(this._nativePtr) {
+    _finalizer.attach(this, _nativePtr, detach: this);
   }
 
   @override
-  LayoutAlign get alignContent => LayoutAlign
-      .values[_yogaStyleGetAlignContent.apply(<dynamic>[_nativePtr]) as int];
+  void dispose() {
+    _disposeYogaStyle.callAsFunction(null, _nativePtr.toJS);
+    _nativePtr = 0;
+    _finalizer.detach(this);
+  }
 
   @override
-  set alignContent(LayoutAlign value) =>
-      _yogaStyleSetAlignContent.apply(<dynamic>[_nativePtr, value.index]);
+  LayoutAlign get alignContent => LayoutAlign.values[(_yogaStyleGetAlignContent
+          .callAsFunction(null, _nativePtr.toJS) as js.JSNumber)
+      .toDartInt];
 
   @override
-  LayoutDirection get direction => LayoutDirection
-      .values[_yogaStyleGetDirection.apply(<dynamic>[_nativePtr]) as int];
+  set alignContent(LayoutAlign value) => _yogaStyleSetAlignContent
+      .callAsFunction(null, _nativePtr.toJS, value.index.toJS);
 
   @override
-  set direction(LayoutDirection value) =>
-      _yogaStyleSetDirection.apply(<dynamic>[_nativePtr, value.index]);
+  LayoutDirection get direction => LayoutDirection.values[
+      (_yogaStyleGetDirection.callAsFunction(null, _nativePtr.toJS)
+              as js.JSNumber)
+          .toDartInt];
 
   @override
-  LayoutFlexDirection get flexDirection => LayoutFlexDirection
-      .values[_yogaStyleGetFlexDirection.apply(<dynamic>[_nativePtr]) as int];
+  set direction(LayoutDirection value) => _yogaStyleSetDirection.callAsFunction(
+      null, _nativePtr.toJS, value.index.toJS);
+
+  @override
+  LayoutFlexDirection get flexDirection => LayoutFlexDirection.values[
+      (_yogaStyleGetFlexDirection.callAsFunction(null, _nativePtr.toJS)
+              as js.JSNumber)
+          .toDartInt];
 
   @override
   set flexDirection(LayoutFlexDirection value) =>
-      _yogaStyleSetFlexDirection.apply(<dynamic>[_nativePtr, value.index]);
+      _yogaStyleSetFlexDirection.callAsFunction(
+        null,
+        _nativePtr.toJS,
+        value.index.toJS,
+      );
 
   @override
-  LayoutJustify get justifyContent => LayoutJustify
-      .values[_yogaStyleGetJustifyContent.apply(<dynamic>[_nativePtr]) as int];
+  LayoutJustify get justifyContent => LayoutJustify.values[
+      (_yogaStyleGetJustifyContent.callAsFunction(null, _nativePtr.toJS)
+              as js.JSNumber)
+          .toDartInt];
 
   @override
   set justifyContent(LayoutJustify value) =>
-      _yogaStyleSetJustifyContent.apply(<dynamic>[_nativePtr, value.index]);
+      _yogaStyleSetJustifyContent.callAsFunction(
+        null,
+        _nativePtr.toJS,
+        value.index.toJS,
+      );
 
   @override
-  LayoutAlign get alignItems => LayoutAlign
-      .values[_yogaStyleGetAlignItems.apply(<dynamic>[_nativePtr]) as int];
+  LayoutAlign get alignItems => LayoutAlign.values[(_yogaStyleGetAlignItems
+          .callAsFunction(null, _nativePtr.toJS) as js.JSNumber)
+      .toDartInt];
 
   @override
-  set alignItems(LayoutAlign value) =>
-      _yogaStyleSetAlignItems.apply(<dynamic>[_nativePtr, value.index]);
+  set alignItems(LayoutAlign value) => _yogaStyleSetAlignItems.callAsFunction(
+      null, _nativePtr.toJS, value.index.toJS);
 
   @override
-  LayoutAlign get alignSelf => LayoutAlign
-      .values[_yogaStyleGetAlignSelf.apply(<dynamic>[_nativePtr]) as int];
+  LayoutAlign get alignSelf => LayoutAlign.values[(_yogaStyleGetAlignSelf
+          .callAsFunction(null, _nativePtr.toJS) as js.JSNumber)
+      .toDartInt];
 
   @override
-  set alignSelf(LayoutAlign value) =>
-      _yogaStyleSetAlignSelf.apply(<dynamic>[_nativePtr, value.index]);
+  set alignSelf(LayoutAlign value) => _yogaStyleSetAlignSelf.callAsFunction(
+      null, _nativePtr.toJS, value.index.toJS);
 
   @override
-  LayoutPosition get positionType => LayoutPosition
-      .values[_yogaStyleGetPositionType.apply(<dynamic>[_nativePtr]) as int];
+  LayoutPosition get positionType => LayoutPosition.values[
+      (_yogaStyleGetPositionType.callAsFunction(null, _nativePtr.toJS)
+              as js.JSNumber)
+          .toDartInt];
 
   @override
-  set positionType(LayoutPosition value) =>
-      _yogaStyleSetPositionType.apply(<dynamic>[_nativePtr, value.index]);
+  set positionType(LayoutPosition value) => _yogaStyleSetPositionType
+      .callAsFunction(null, _nativePtr.toJS, value.index.toJS);
 
   @override
-  LayoutWrap get flexWrap => LayoutWrap
-      .values[_yogaStyleGetFlexWrap.apply(<dynamic>[_nativePtr]) as int];
+  LayoutWrap get flexWrap => LayoutWrap.values[(_yogaStyleGetFlexWrap
+          .callAsFunction(null, _nativePtr.toJS) as js.JSNumber)
+      .toDartInt];
 
   @override
-  set flexWrap(LayoutWrap value) =>
-      _yogaStyleSetFlexWrap.apply(<dynamic>[_nativePtr, value.index]);
+  set flexWrap(LayoutWrap value) => _yogaStyleSetFlexWrap.callAsFunction(
+      null, _nativePtr.toJS, value.index.toJS);
 
   @override
-  LayoutOverflow get overflow => LayoutOverflow
-      .values[_yogaStyleGetOverflow.apply(<dynamic>[_nativePtr]) as int];
+  LayoutOverflow get overflow => LayoutOverflow.values[(_yogaStyleGetOverflow
+          .callAsFunction(null, _nativePtr.toJS) as js.JSNumber)
+      .toDartInt];
 
   @override
-  set overflow(LayoutOverflow value) =>
-      _yogaStyleSetOverflow.apply(<dynamic>[_nativePtr, value.index]);
+  set overflow(LayoutOverflow value) => _yogaStyleSetOverflow.callAsFunction(
+      null, _nativePtr.toJS, value.index.toJS);
 
   @override
-  LayoutDisplay get display => LayoutDisplay
-      .values[_yogaStyleGetDisplay.apply(<dynamic>[_nativePtr]) as int];
+  LayoutDisplay get display => LayoutDisplay.values[(_yogaStyleGetDisplay
+          .callAsFunction(null, _nativePtr.toJS) as js.JSNumber)
+      .toDartInt];
 
   @override
-  set display(LayoutDisplay value) =>
-      _yogaStyleSetDisplay.apply(<dynamic>[_nativePtr, value.index]);
+  set display(LayoutDisplay value) => _yogaStyleSetDisplay.callAsFunction(
+      null, _nativePtr.toJS, value.index.toJS);
 
   @override
   double? get flex {
-    double value = _yogaStyleGetFlex.apply(<dynamic>[_nativePtr]) as double;
+    double value =
+        (_yogaStyleGetFlex.callAsFunction(null, _nativePtr.toJS) as js.JSNumber)
+            .toDartDouble;
     if (value.isNaN) {
       return null;
     }
@@ -271,12 +307,17 @@ class LayoutStyleWasm extends LayoutStyle {
   }
 
   @override
-  set flex(double? value) => _yogaStyleSetFlex
-      .apply(<dynamic>[_nativePtr, value == null ? double.nan : value]);
+  set flex(double? value) => _yogaStyleSetFlex.callAsFunction(
+        null,
+        _nativePtr.toJS,
+        (value == null ? double.nan : value).toJS,
+      );
 
   @override
   double? get flexGrow {
-    double value = _yogaStyleGetFlexGrow.apply(<dynamic>[_nativePtr]) as double;
+    double value = (_yogaStyleGetFlexGrow.callAsFunction(null, _nativePtr.toJS)
+            as js.JSNumber)
+        .toDartDouble;
     if (value.isNaN) {
       return null;
     }
@@ -284,13 +325,14 @@ class LayoutStyleWasm extends LayoutStyle {
   }
 
   @override
-  set flexGrow(double? value) => _yogaStyleSetFlexGrow
-      .apply(<dynamic>[_nativePtr, value == null ? double.nan : value]);
+  set flexGrow(double? value) => _yogaStyleSetFlexGrow.callAsFunction(
+      null, _nativePtr.toJS, (value == null ? double.nan : value).toJS);
 
   @override
   double? get flexShrink {
-    double value =
-        _yogaStyleGetFlexShrink.apply(<dynamic>[_nativePtr]) as double;
+    double value = (_yogaStyleGetFlexShrink.callAsFunction(
+            null, _nativePtr.toJS) as js.JSNumber)
+        .toDartDouble;
     if (value.isNaN) {
       return null;
     }
@@ -298,149 +340,269 @@ class LayoutStyleWasm extends LayoutStyle {
   }
 
   @override
-  set flexShrink(double? value) => _yogaStyleSetFlexShrink
-      .apply(<dynamic>[_nativePtr, value == null ? double.nan : value]);
+  set flexShrink(double? value) => _yogaStyleSetFlexShrink.callAsFunction(
+        null,
+        _nativePtr.toJS,
+        (value == null ? double.nan : value).toJS,
+      );
 
   @override
-  LayoutValue get flexBasis =>
-      _layoutValueFromJs(_yogaStyleGetFlexBasis.apply(<dynamic>[_nativePtr]));
+  LayoutValue get flexBasis => _layoutValueFromJs(
+        _yogaStyleGetFlexBasis.callAsFunction(
+          null,
+          _nativePtr.toJS,
+        ),
+      );
 
   @override
-  set flexBasis(LayoutValue value) => _yogaStyleSetFlexBasis
-      .apply(<dynamic>[_nativePtr, value.value, value.unit.index]);
+  set flexBasis(LayoutValue value) => _yogaStyleSetFlexBasis.callAsFunction(
+        null,
+        _nativePtr.toJS,
+        value.value.toJS,
+        value.unit.index.toJS,
+      );
 
   @override
   LayoutValue getMargin(LayoutEdge edge) => _layoutValueFromJs(
-      _yogaStyleGetMargin.apply(<dynamic>[_nativePtr, edge.index]));
+        _yogaStyleGetMargin.callAsFunction(
+          null,
+          _nativePtr.toJS,
+          edge.index.toJS,
+        ),
+      );
 
   @override
-  void setMargin(LayoutEdge edge, LayoutValue value) => _yogaStyleSetMargin
-      .apply(<dynamic>[_nativePtr, edge.index, value.value, value.unit.index]);
+  void setMargin(LayoutEdge edge, LayoutValue value) =>
+      _yogaStyleSetMargin.callAsFunction(
+        null,
+        _nativePtr.toJS,
+        edge.index.toJS,
+        value.value.toJS,
+        value.unit.index.toJS,
+      );
 
   @override
   LayoutValue getPosition(LayoutEdge edge) => _layoutValueFromJs(
-      _yogaStyleGetPosition.apply(<dynamic>[_nativePtr, edge.index]));
+        _yogaStyleGetPosition.callAsFunction(
+          null,
+          _nativePtr.toJS,
+          edge.index.toJS,
+        ),
+      );
 
   @override
-  void setPosition(LayoutEdge edge, LayoutValue value) => _yogaStyleSetPosition
-      .apply(<dynamic>[_nativePtr, edge.index, value.value, value.unit.index]);
+  void setPosition(LayoutEdge edge, LayoutValue value) =>
+      _yogaStyleSetPosition.callAsFunction(
+        null,
+        _nativePtr.toJS,
+        edge.index.toJS,
+        value.value.toJS,
+        value.unit.index.toJS,
+      );
 
   @override
   LayoutValue getPadding(LayoutEdge edge) => _layoutValueFromJs(
-      _yogaStyleGetPadding.apply(<dynamic>[_nativePtr, edge.index]));
+        _yogaStyleGetPadding.callAsFunction(
+          null,
+          _nativePtr.toJS,
+          edge.index.toJS,
+        ),
+      );
 
   @override
-  void setPadding(LayoutEdge edge, LayoutValue value) => _yogaStyleSetPadding
-      .apply(<dynamic>[_nativePtr, edge.index, value.value, value.unit.index]);
+  void setPadding(LayoutEdge edge, LayoutValue value) =>
+      _yogaStyleSetPadding.callAsFunction(
+        null,
+        _nativePtr.toJS,
+        edge.index.toJS,
+        value.value.toJS,
+        value.unit.index.toJS,
+      );
 
   @override
   LayoutValue getBorder(LayoutEdge edge) => _layoutValueFromJs(
-      _yogaStyleGetBorder.apply(<dynamic>[_nativePtr, edge.index]));
+        _yogaStyleGetBorder.callAsFunction(
+          null,
+          _nativePtr.toJS,
+          edge.index.toJS,
+        ),
+      );
 
   @override
-  void setBorder(LayoutEdge edge, LayoutValue value) => _yogaStyleSetBorder
-      .apply(<dynamic>[_nativePtr, edge.index, value.value, value.unit.index]);
+  void setBorder(LayoutEdge edge, LayoutValue value) =>
+      _yogaStyleSetBorder.callAsFunction(
+        null,
+        _nativePtr.toJS,
+        edge.index.toJS,
+        value.value.toJS,
+        value.unit.index.toJS,
+      );
 
   @override
   LayoutValue getGap(LayoutGutter gutter) => _layoutValueFromJs(
-      _yogaStyleGetGap.apply(<dynamic>[_nativePtr, gutter.index]));
+        _yogaStyleGetGap.callAsFunction(
+          _nativePtr.toJS,
+          gutter.index.toJS,
+        ),
+      );
 
   @override
-  void setGap(LayoutGutter gutter, LayoutValue value) => _yogaStyleSetGap.apply(
-      <dynamic>[_nativePtr, gutter.index, value.value, value.unit.index]);
+  void setGap(LayoutGutter gutter, LayoutValue value) =>
+      _yogaStyleSetGap.callAsFunction(
+        null,
+        _nativePtr.toJS,
+        gutter.index.toJS,
+        value.value.toJS,
+        value.unit.index.toJS,
+      );
 
   @override
   LayoutValue getDimension(LayoutDimension dimension) => _layoutValueFromJs(
-      _yogaStyleGetDimension.apply(<dynamic>[_nativePtr, dimension.index]));
+        _yogaStyleGetDimension.callAsFunction(
+          null,
+          _nativePtr.toJS,
+          dimension.index.toJS,
+        ),
+      );
 
   @override
   void setDimension(LayoutDimension dimension, LayoutValue value) =>
-      _yogaStyleSetDimension.apply(<dynamic>[
-        _nativePtr,
-        dimension.index,
-        value.value,
-        value.unit.index
-      ]);
+      _yogaStyleSetDimension.callAsFunction(
+        null,
+        _nativePtr.toJS,
+        dimension.index.toJS,
+        value.value.toJS,
+        value.unit.index.toJS,
+      );
 
   @override
   LayoutValue getMinDimension(LayoutDimension dimension) => _layoutValueFromJs(
-      _yogaStyleGetMinDimension.apply(<dynamic>[_nativePtr, dimension.index]));
+        _yogaStyleGetMinDimension.callAsFunction(
+          null,
+          _nativePtr.toJS,
+          dimension.index.toJS,
+        ),
+      );
 
   @override
   void setMinDimension(LayoutDimension dimension, LayoutValue value) =>
-      _yogaStyleSetMinDimension.apply(<dynamic>[
-        _nativePtr,
-        dimension.index,
-        value.value,
-        value.unit.index
-      ]);
+      _yogaStyleSetMinDimension.callAsFunction(
+        null,
+        _nativePtr.toJS,
+        dimension.index.toJS,
+        value.value.toJS,
+        value.unit.index.toJS,
+      );
 
   @override
   LayoutValue getMaxDimension(LayoutDimension dimension) => _layoutValueFromJs(
-      _yogaStyleGetMaxDimension.apply(<dynamic>[_nativePtr, dimension.index]));
+        _yogaStyleGetMaxDimension.callAsFunction(
+          null,
+          _nativePtr.toJS,
+          dimension.index.toJS,
+        ),
+      );
 
   @override
   void setMaxDimension(LayoutDimension dimension, LayoutValue value) =>
-      _yogaStyleSetMaxDimension.apply(<dynamic>[
-        _nativePtr,
-        dimension.index,
-        value.value,
-        value.unit.index
-      ]);
+      _yogaStyleSetMaxDimension.callAsFunction(
+        null,
+        _nativePtr.toJS,
+        dimension.index.toJS,
+        value.value.toJS,
+        value.unit.index.toJS,
+      );
 }
 
 class LayoutNodeWasm extends LayoutNode {
+  static final Finalizer<int> _finalizer = Finalizer(
+    (nativePtr) => _disposeYogaNode.callAsFunction(
+      null,
+      nativePtr.toJS,
+    ),
+  );
+
   int _nativePtr;
-  LayoutNodeWasm(this._nativePtr);
+  final bool isOwned;
+  LayoutNodeWasm(this._nativePtr, this.isOwned) {
+    if (isOwned) {
+      _finalizer.attach(this, _nativePtr, detach: this);
+    }
+  }
 
   @override
   void dispose() {
-    _disposeYogaNode.apply(<dynamic>[_nativePtr]);
+    if (isOwned) {
+      _disposeYogaNode.callAsFunction(
+        null,
+        _nativePtr.toJS,
+      );
+      _finalizer.detach(this);
+    }
     _callbackLookup.remove(_nativePtr);
     _nativePtr = 0;
   }
 
   @override
-  void setStyle(LayoutStyle style) => _yogaNodeSetStyle
-      .apply(<dynamic>[_nativePtr, (style as LayoutStyleWasm)._nativePtr]);
+  void setStyle(LayoutStyle style) => _yogaNodeSetStyle.callAsFunction(
+        null,
+        _nativePtr.toJS,
+        (style as LayoutStyleWasm)._nativePtr.toJS,
+      );
 
   @override
-  LayoutNodeType get nodeType => LayoutNodeType
-      .values[_yogaNodeGetType.apply(<dynamic>[_nativePtr]) as int];
+  LayoutNodeType get nodeType => LayoutNodeType.values[
+      (_yogaNodeGetType.callAsFunction(null, _nativePtr.toJS) as js.JSNumber)
+          .toDartInt];
 
   @override
-  set nodeType(LayoutNodeType value) =>
-      _yogaNodeSetType.apply(<dynamic>[_nativePtr, value.index]);
+  set nodeType(LayoutNodeType value) => _yogaNodeSetType.callAsFunction(
+        null,
+        _nativePtr.toJS,
+        value.index.toJS,
+      );
 
   @override
   void calculateLayout(double availableWidth, double availableHeight,
           LayoutDirection direction) =>
-      _yogaNodeCalculateLayout.apply(
-        <dynamic>[
-          _nativePtr,
-          availableWidth,
-          availableHeight,
-          direction.index,
-        ],
+      _yogaNodeCalculateLayout.callAsFunction(
+        null,
+        _nativePtr.toJS,
+        availableWidth.toJS,
+        availableHeight.toJS,
+        direction.index.toJS,
       );
 
   @override
   Layout get layout {
-    var data = _yogaNodeGetLayout.apply(<dynamic>[_nativePtr]) as js.JsObject;
+    var data =
+        _yogaNodeGetLayout.callAsFunction(null, _nativePtr.toJS) as js.JSObject;
     return _LayoutWasm(
-      data['left'] as double,
-      data['top'] as double,
-      data['width'] as double,
-      data['height'] as double,
+      (data['left'] as js.JSNumber).toDartDouble,
+      (data['top'] as js.JSNumber).toDartDouble,
+      (data['width'] as js.JSNumber).toDartDouble,
+      (data['height'] as js.JSNumber).toDartDouble,
     );
   }
 
   @override
-  void clearChildren() => _yogaNodeClearChildren.apply(<dynamic>[_nativePtr]);
+  void clearChildren() => _yogaNodeClearChildren.callAsFunction(
+        null,
+        _nativePtr.toJS,
+      );
 
   @override
-  void insertChild(LayoutNode node, int index) => _yogaNodeInsertChild
-      .apply(<dynamic>[_nativePtr, (node as LayoutNodeWasm)._nativePtr, index]);
+  void insertChild(LayoutNode node, int index) =>
+      _yogaNodeInsertChild.callAsFunction(
+        null,
+        _nativePtr.toJS,
+        (node as LayoutNodeWasm)._nativePtr.toJS,
+        index.toJS,
+      );
+
+  @override
+  void removeChild(LayoutNode node) => _yogaNodeRemoveChild.callAsFunction(
+      null, _nativePtr.toJS, (node as LayoutNodeWasm)._nativePtr.toJS);
 
   // Store a hashmap to lookup pointer to layout nodes, necessary when using a
   // measure or baseline callback.
@@ -459,27 +621,26 @@ class LayoutNodeWasm extends LayoutNode {
     _measureFunction = value;
     if (value == null) {
       _callbackLookup.remove(_nativePtr);
-      _yogaNodeClearMeasureFunc.apply(<dynamic>[_nativePtr]);
+      _yogaNodeClearMeasureFunc.callAsFunction(null, _nativePtr.toJS);
     } else {
-      _yogaNodeSetMeasureFunc.apply(<dynamic>[
-        _nativePtr,
-        js.allowInterop(
-          (int nativeLayout, double width, int widthMode, double height,
-              int heightMode) {
-            var layoutNode = _callbackLookup[nativeLayout];
-            if (layoutNode == null) {
-              return Float32List.fromList([0, 0]);
-            }
-            var size = value(
-                layoutNode,
-                width,
-                LayoutMeasureMode.values[widthMode],
-                height,
-                LayoutMeasureMode.values[heightMode]);
-            return Float32List.fromList([size.width, size.height]);
-          },
-        )
-      ]);
+      _yogaNodeSetMeasureFunc.callAsFunction(
+        null,
+        _nativePtr.toJS,
+        (int nativeLayout, double width, int widthMode, double height,
+            int heightMode) {
+          var layoutNode = _callbackLookup[nativeLayout];
+          if (layoutNode == null) {
+            return Float32List.fromList([0, 0]).toJS;
+          }
+          var size = value(
+              layoutNode,
+              width,
+              LayoutMeasureMode.values[widthMode],
+              height,
+              LayoutMeasureMode.values[heightMode]);
+          return Float32List.fromList([size.width, size.height]).toJS;
+        }.toJS,
+      );
       _callbackLookup[_nativePtr] = this;
     }
   }
@@ -495,30 +656,38 @@ class LayoutNodeWasm extends LayoutNode {
     }
     _baselineFunction = value;
     if (value == null) {
-      _yogaNodeClearBaselineFunc.apply(<dynamic>[_nativePtr]);
+      _yogaNodeClearBaselineFunc.callAsFunction(
+        null,
+        _nativePtr.toJS,
+      );
     } else {
-      _yogaNodeSetBaselineFunc.apply(<dynamic>[
-        _nativePtr,
-        js.allowInterop(
-          (int nativeLayout, double width, double height) {
-            var layoutNode = _callbackLookup[nativeLayout];
-            if (layoutNode == null) {
-              return Float32List.fromList([0, 0]);
-            }
-            return value(layoutNode, width, height);
-          },
-        )
-      ]);
+      _yogaNodeSetBaselineFunc.callAsFunction(
+        null,
+        _nativePtr.toJS,
+        (int nativeLayout, double width, double height) {
+          var layoutNode = _callbackLookup[nativeLayout];
+          if (layoutNode == null) {
+            return Float32List.fromList([0, 0]).toJS;
+          }
+          return value(layoutNode, width, height).toJS;
+        }.toJS,
+      );
       _callbackLookup[_nativePtr] = this;
     }
   }
 
   @override
-  void markDirty() => _yogaNodeMarkDirty.apply(<dynamic>[_nativePtr]);
+  void markDirty() => _yogaNodeMarkDirty.callAsFunction(
+        null,
+        _nativePtr.toJS,
+      );
 }
 
 LayoutStyle makeLayoutStyle() =>
-    LayoutStyleWasm(_makeYogaStyle.apply(<dynamic>[]) as int);
+    LayoutStyleWasm((_makeYogaStyle.callAsFunction() as js.JSNumber).toDartInt);
 
-LayoutNode makeLayoutNode() =>
-    LayoutNodeWasm(_makeYogaNode.apply(<dynamic>[]) as int);
+LayoutNode makeLayoutNode() => LayoutNodeWasm(
+    (_makeYogaNode.callAsFunction() as js.JSNumber).toDartInt, true);
+
+LayoutNode makeLayoutNodeExternal(dynamic ref) =>
+    LayoutNodeWasm(ref as int, false);

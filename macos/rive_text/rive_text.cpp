@@ -137,6 +137,7 @@ EXPORT void deleteLines(rive::SimpleArray<rive::SimpleArray<rive::GlyphLine>>* r
 }
 
 std::vector<rive::Font*> fallbackFonts;
+bool useFallbackFonts = false;
 
 EXPORT
 void setFallbackFonts(rive::Font** fonts, uint64_t fontsLength)
@@ -186,3 +187,7 @@ rive::SimpleArray<uint32_t>* fontFeatures(rive::Font* font)
 }
 
 EXPORT void deleteFontFeatures(rive::SimpleArray<uint32_t>* features) { delete features; }
+
+EXPORT void disableFallbackFonts() { rive::Font::gFallbackProcEnabled = false; }
+
+EXPORT void enableFallbackFonts() { rive::Font::gFallbackProcEnabled = true; }

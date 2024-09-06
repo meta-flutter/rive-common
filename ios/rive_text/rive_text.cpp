@@ -189,3 +189,7 @@ rive::SimpleArray<uint32_t>* fontFeatures(rive::Font* font)
 }
 
 EXPORT void deleteFontFeatures(rive::SimpleArray<uint32_t>* features) { delete features; }
+
+EXPORT void disableFallbackFonts() { rive::Font::gFallbackProcEnabled = false; }
+
+EXPORT void enableFallbackFonts() { rive::Font::gFallbackProcEnabled = true; }

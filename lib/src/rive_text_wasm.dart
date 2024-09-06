@@ -1,33 +1,37 @@
 // ignore: avoid_web_libraries_in_flutter
 import 'dart:async';
 import 'dart:collection';
-import 'dart:html' as html;
-import 'dart:js' as js;
+import 'dart:js_interop' as js;
+import 'dart:js_interop_unsafe';
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart';
 import 'package:rive_common/math.dart';
 import 'package:rive_common/rive_text.dart';
 import 'package:rive_common/src/layout_engine_wasm.dart';
 import 'package:rive_common/src/rive_audio_wasm.dart';
 import 'package:rive_common/src/rive_text_wasm_version.dart';
 import 'package:rive_common/utilities.dart';
+import 'package:web/web.dart' as html;
 
-late js.JsFunction _makeFont;
-late js.JsFunction _fontAxis;
-late js.JsFunction _fontAxisCount;
-late js.JsFunction _fontAxisValue;
-late js.JsFunction _makeFontWithOptions;
-late js.JsFunction _deleteFont;
-late js.JsFunction _makeGlyphPath;
-late js.JsFunction _deleteGlyphPath;
-late js.JsFunction _shapeText;
-late js.JsFunction _setFallbackFonts;
-late js.JsFunction _deleteShapeResult;
-late js.JsFunction _breakLines;
-late js.JsFunction _deleteLines;
-late js.JsFunction _fontFeatures;
-late js.JsFunction _fontAscent;
-late js.JsFunction _fontDescent;
+late js.JSFunction _makeFont;
+late js.JSFunction _fontAxis;
+late js.JSFunction _fontAxisCount;
+late js.JSFunction _fontAxisValue;
+late js.JSFunction _makeFontWithOptions;
+late js.JSFunction _deleteFont;
+late js.JSFunction _makeGlyphPath;
+late js.JSFunction _deleteGlyphPath;
+late js.JSFunction _shapeText;
+late js.JSFunction _setFallbackFonts;
+late js.JSFunction _deleteShapeResult;
+late js.JSFunction _breakLines;
+late js.JSFunction _deleteLines;
+late js.JSFunction _fontFeatures;
+late js.JSFunction _fontAscent;
+late js.JSFunction _fontDescent;
+late js.JSFunction _disableFallbackFonts;
+late js.JSFunction _enableFallbackFonts;
 
 class RawPathWasm extends RawPath {
   final Uint8List verbs;
@@ -202,26 +206,40 @@ class BreakLinesResultFFI extends BreakLinesResult {
 }
 
 class TextShapeResultWasm extends TextShapeResult {
-  final int shapeResultPtr;
+  static final _finalizer = Finalizer<js.JSAny>(
+    (ptr) => _deleteShapeResult.callAsFunction(
+      null,
+      ptr,
+    ),
+  );
+  int _shapeResultPtr;
+  int get shapeResultPtr => _shapeResultPtr;
+
   @override
   final List<ParagraphWasm> paragraphs;
 
-  TextShapeResultWasm(this.shapeResultPtr, this.paragraphs);
+  TextShapeResultWasm(this._shapeResultPtr, this.paragraphs) {
+    _finalizer.attach(this, shapeResultPtr.toJS, detach: this);
+  }
+
   @override
-  void dispose() => _deleteShapeResult.apply(<dynamic>[shapeResultPtr]);
+  void dispose() {
+    _finalizer.detach(this);
+    _deleteShapeResult.callAsFunction(null, _shapeResultPtr.toJS);
+    _shapeResultPtr = 0;
+  }
 
   @override
   BreakLinesResult breakLines(double width, TextAlign alignment) {
-    var result = _breakLines.apply(
-      <dynamic>[
-        shapeResultPtr,
-        width,
-        alignment.index,
-      ],
-    ) as js.JsObject;
+    var result = _breakLines.callAsFunction(
+      null,
+      shapeResultPtr.toJS,
+      width.toJS,
+      alignment.index.toJS,
+    ) as js.JSObject;
 
-    var rawResult = result['rawResult'] as int;
-    var results = result['results'] as Uint8List;
+    var rawResult = (result['rawResult'] as js.JSNumber).toDartInt;
+    var results = (result['results'] as js.JSUint8Array).toDart;
 
     const lineSize = 32;
     var paragraphsList = ByteData.view(results.buffer, results.offsetInBytes)
@@ -247,10 +265,9 @@ class TextShapeResultWasm extends TextShapeResult {
       }
       paragraphsLines.add(lines);
     }
-    _deleteLines.apply(
-      <dynamic>[
-        rawResult,
-      ],
+    _deleteLines.callAsFunction(
+      null,
+      rawResult.toJS,
     );
 
     return BreakLinesResultFFI(paragraphsLines);
@@ -455,14 +472,14 @@ class FontWasm extends Font {
 
   @override
   RawPath getPath(int glyphId) {
-    var object =
-        _makeGlyphPath.apply(<dynamic>[fontPtr, glyphId]) as js.JsObject;
-    var rawPathPtr = object['rawPath'] as int;
+    var object = _makeGlyphPath.callAsFunction(null, fontPtr.toJS, glyphId.toJS)
+        as js.JSObject;
+    var rawPathPtr = (object['rawPath'] as js.JSNumber).toDartInt;
 
     // The buffer for these share the WASM heap buffer, which is efficient but
     // could also be lost in-between calls to WASM.
-    var verbs = object['verbs'] as Uint8List;
-    var points = object['points'] as Float32List;
+    var verbs = (object['verbs'] as js.JSUint8Array).toDart;
+    var points = (object['points'] as js.JSFloat32Array).toDart;
 
     // We copy the verb and points structures so we don't have to worry about
     // the references being lost if the WASM heap is re-allocated.
@@ -471,7 +488,7 @@ class FontWasm extends Font {
       points: Float32List.fromList(points),
     );
     // Immediately delete the native glyph's raw path.
-    _deleteGlyphPath.apply(<dynamic>[rawPathPtr]);
+    _deleteGlyphPath.callAsFunction(null, rawPathPtr.toJS);
     return rawPath;
   }
 
@@ -494,15 +511,14 @@ class FontWasm extends Font {
       writer.writeUint8(0); // padding to word align struct
     }
 
-    var result = _shapeText.apply(
-      <dynamic>[
-        Uint32List.fromList(text.codeUnits),
-        writer.uint8Buffer,
-      ],
-    ) as js.JsObject;
+    var result = _shapeText.callAsFunction(
+      null,
+      Uint32List.fromList(text.codeUnits).toJS,
+      writer.uint8Buffer.toJS,
+    ) as js.JSObject;
 
-    var rawResult = result['rawResult'] as int;
-    var results = result['results'] as Uint8List;
+    var rawResult = (result['rawResult'] as js.JSNumber).toDartInt;
+    var results = (result['results'] as js.JSUint8Array).toDart;
 
     var reader = BinaryReader.fromList(results);
     var paragraphsPointer = reader.readUint32();
@@ -526,13 +542,16 @@ class FontWasm extends Font {
 
   @override
   Iterable<FontTag> get features {
-    var features = _fontFeatures.apply(<dynamic>[fontPtr]) as js.JsArray;
+    var features =
+        (_fontFeatures.callAsFunction(null, fontPtr.toJS) as js.JSArray).toDart;
     return features.map((value) => FontTagWasm(value as int));
   }
 
   @override
   double axisValue(int axisTag) =>
-      _fontAxisValue.apply(<dynamic>[fontPtr, axisTag]) as double;
+      (_fontAxisValue.callAsFunction(null, fontPtr.toJS, axisTag.toJS)
+              as js.JSNumber)
+          .toDartDouble;
 
   static const int sizeOfNativeAxisCoord = 8;
 
@@ -557,11 +576,13 @@ class FontWasm extends Font {
       featureWriter.writeUint32(feature.value);
     }
 
-    var ptr = _makeFontWithOptions.apply(<dynamic>[
-      fontPtr,
-      coordsWriter.uint8Buffer,
-      featureWriter.uint8Buffer
-    ]) as int;
+    var ptr = (_makeFontWithOptions.callAsFunction(
+      null,
+      fontPtr.toJS,
+      coordsWriter.uint8Buffer.toJS,
+      featureWriter.uint8Buffer.toJS,
+    ) as js.JSNumber)
+        .toDartInt;
     if (ptr == 0) {
       return null;
     }
@@ -569,10 +590,14 @@ class FontWasm extends Font {
   }
 
   @override
-  double get ascent => _fontAscent.apply(<dynamic>[fontPtr]) as double;
+  double get ascent =>
+      (_fontAscent.callAsFunction(null, fontPtr.toJS) as js.JSNumber)
+          .toDartDouble;
 
   @override
-  double get descent => _fontDescent.apply(<dynamic>[fontPtr]) as double;
+  double get descent =>
+      (_fontDescent.callAsFunction(null, fontPtr.toJS) as js.JSNumber)
+          .toDartDouble;
 }
 
 class FontAxisWasm extends FontAxis {
@@ -613,13 +638,21 @@ class FontAxisIterator implements Iterator<FontAxis> {
   int axisIndex = -1;
 
   FontAxisIterator(this.fontPtr)
-      : axisCount = _fontAxisCount.apply(<dynamic>[fontPtr]) as int;
+      : axisCount =
+            (_fontAxisCount.callAsFunction(null, fontPtr.toJS) as js.JSNumber)
+                .toDartInt;
 
   @override
   FontAxis get current {
-    var array = _fontAxis.apply(<dynamic>[fontPtr, axisIndex]) as js.JsArray;
-    return FontAxisWasm(array[0] as int, array[1] as double, array[2] as double,
-        array[3] as double);
+    var array = (_fontAxis.callAsFunction(null, fontPtr.toJS, axisIndex.toJS)
+            as js.JSArray)
+        .toDart;
+
+    return FontAxisWasm(
+        (array[0] as js.JSNumber).toDartInt,
+        (array[1] as js.JSNumber).toDartDouble,
+        (array[2] as js.JSNumber).toDartDouble,
+        (array[3] as js.JSNumber).toDartDouble);
   }
 
   @override
@@ -640,82 +673,134 @@ class StrongFontWasm extends FontWasm {
   StrongFontWasm(int fontPtr) : super(fontPtr);
 
   @override
-  void dispose() => _deleteFont.apply(<dynamic>[fontPtr]);
+  void dispose() => _deleteFont.callAsFunction(null, fontPtr.toJS);
 }
 
 Font? decodeFont(Uint8List bytes) {
-  int ptr = _makeFont.apply(<dynamic>[bytes]) as int;
+  int ptr =
+      (_makeFont.callAsFunction(null, bytes.toJS) as js.JSNumber).toDartInt;
   if (ptr == 0) {
     return null;
   }
   return StrongFontWasm(ptr);
 }
 
-Future<void> initFont() async {
+Future<bool> initFont() async {
   // Temp fix for Flutter 3.10.0 issue - https://github.com/flutter/flutter/issues/126713
-  if (js.context['fixRequireJs'] != null) {
-    js.context.callMethod('fixRequireJs');
+  if (js.globalContext['fixRequireJs'] != null) {
+    js.globalContext.callMethod('fixRequireJs'.toJS);
   }
 
-  var script = html.ScriptElement()
-    ..src = const bool.fromEnvironment(
-      'LOCAL_RIVE_FLUTTER_WASM',
-      defaultValue: false,
-    )
-        ? 'http://localhost:8282/debug/rive_text.js'
-        : 'https://cdn.jsdelivr.net/npm/@rive-app/flutter-wasm@$wasmVersion/build/bin/release/rive_text.js'
-    ..type = 'application/javascript'
-    ..defer = true;
+  void _linkWasmFunctions(js.JSObject module) {
+    var init = module['init'] as js.JSFunction;
+    init.callAsFunction();
+    _makeFont = module['makeFont'] as js.JSFunction;
+    _fontAxis = module['fontAxis'] as js.JSFunction;
+    _fontAxisValue = module['fontAxisValue'] as js.JSFunction;
+    _fontAxisCount = module['fontAxisCount'] as js.JSFunction;
+    _makeFontWithOptions = module['makeFontWithOptions'] as js.JSFunction;
+    _deleteFont = module['deleteFont'] as js.JSFunction;
+    _makeGlyphPath = module['makeGlyphPath'] as js.JSFunction;
+    _deleteGlyphPath = module['deleteGlyphPath'] as js.JSFunction;
+    _shapeText = module['shapeText'] as js.JSFunction;
+    _setFallbackFonts = module['setFallbackFonts'] as js.JSFunction;
+    _deleteShapeResult = module['deleteShapeResult'] as js.JSFunction;
+    _breakLines = module['breakLines'] as js.JSFunction;
+    _deleteLines = module['deleteLines'] as js.JSFunction;
+    _fontFeatures = module['fontFeatures'] as js.JSFunction;
+    _fontAscent = module['fontAscent'] as js.JSFunction;
+    _fontDescent = module['fontDescent'] as js.JSFunction;
+    _disableFallbackFonts = module['disableFallbackFonts'] as js.JSFunction;
+    _enableFallbackFonts = module['enableFallbackFonts'] as js.JSFunction;
 
-  html.document.body!.append(script);
-  await script.onLoad.first;
+    AudioEngineWasm.initWasmModule(module);
+    LayoutEngineWasm.initWasmModule(module);
+  }
 
-  var initWasm = js.context['RiveText'] as js.JsFunction;
-  var promise = initWasm.apply(<dynamic>[]) as js.JsObject;
-  var thenFunction = promise['then'] as js.JsFunction;
-  var completer = Completer<void>();
-  thenFunction.apply(
-    <dynamic>[
-      (js.JsObject module) {
-        var init = module['init'] as js.JsFunction;
-        init.apply(<dynamic>[]);
-        _makeFont = module['makeFont'] as js.JsFunction;
-        _fontAxis = module['fontAxis'] as js.JsFunction;
-        _fontAxisValue = module['fontAxisValue'] as js.JsFunction;
-        _fontAxisCount = module['fontAxisCount'] as js.JsFunction;
-        _makeFontWithOptions = module['makeFontWithOptions'] as js.JsFunction;
-        _deleteFont = module['deleteFont'] as js.JsFunction;
-        _makeGlyphPath = module['makeGlyphPath'] as js.JsFunction;
-        _deleteGlyphPath = module['deleteGlyphPath'] as js.JsFunction;
-        _shapeText = module['shapeText'] as js.JsFunction;
-        _setFallbackFonts = module['setFallbackFonts'] as js.JsFunction;
-        _deleteShapeResult = module['deleteShapeResult'] as js.JsFunction;
-        _breakLines = module['breakLines'] as js.JsFunction;
-        _deleteLines = module['deleteLines'] as js.JsFunction;
-        _fontFeatures = module['fontFeatures'] as js.JsFunction;
-        _fontAscent = module['fontAscent'] as js.JsFunction;
-        _fontDescent = module['fontDescent'] as js.JsFunction;
+  Future<bool> _loadWasm(
+    String source,
+    String name, {
+    bool isRelative = false,
+  }) async {
+    var script = html.HTMLScriptElement()
+      ..src = const bool.fromEnvironment(
+        'LOCAL_RIVE_FLUTTER_WASM',
+        defaultValue: false,
+      )
+          ? 'http://localhost:8282/release/$source'
+          : isRelative
+              ? source
+              : 'https://cdn.jsdelivr.net/npm/@rive-app/flutter-wasm@$wasmVersion/build/bin/release/$source'
+      ..type = 'application/javascript'
+      ..defer = true;
 
-        AudioEngineWasm.initWasmModule(module);
-        LayoutEngineWasm.initWasmModule(module);
+    html.document.body!.append(script);
+    await script.onLoad.first;
 
-        completer.complete();
-      }
-    ],
-    thisArg: promise,
+    var initWasm = js.globalContext[name] as js.JSFunction;
+    var promise = initWasm.callAsFunction() as js.JSObject;
+    var thenFunction = promise['then'] as js.JSFunction;
+
+    var completer = Completer<bool>();
+    thenFunction.callAsFunction(
+      promise,
+      (js.JSObject module) {
+        _linkWasmFunctions(module);
+        completer.complete(true);
+      }.toJS,
+      ((js.JSObject error) => completer.complete(false)).toJS,
+    );
+    return completer.future;
+  }
+
+  var env = const String.fromEnvironment(
+    'RIVE_ENVIRONMENT',
+    defaultValue: 'unknown',
   );
-  return completer.future;
+
+  if (env != 'unknown' &&
+      defaultTargetPlatform != TargetPlatform.iOS &&
+      defaultTargetPlatform != TargetPlatform.android) {
+    // Try threaded version.
+    if (await _loadWasm('rive_text.js?v=DEPLOYMENTVERSION', 'RiveText',
+        isRelative: true)) {
+      return true;
+    }
+  }
+
+  // Try simd version.
+  if (await _loadWasm('simd/rive_text.js', 'RiveText')) {
+    return true;
+  }
+  // Try non-simd version.
+  if (await _loadWasm('rive_text.js', 'RiveTextNoSimd')) {
+    return true;
+  }
+
+  // Couldn't load a valid wasm module.
+  return false;
 }
 
 void setFallbackFonts(List<Font> fonts) {
-  _setFallbackFonts.apply(
-    <dynamic>[
-      Uint32List.fromList(
-        fonts
-            .cast<FontWasm>()
-            .map((font) => font.fontPtr)
-            .toList(growable: false),
-      ),
-    ],
+  _setFallbackFonts.callAsFunction(
+    null,
+    Uint32List.fromList(
+      fonts
+          .cast<FontWasm>()
+          .map((font) => font.fontPtr)
+          .toList(growable: false),
+    ).toJS,
+  );
+}
+
+void disableFallbackFonts() {
+  _disableFallbackFonts.callAsFunction(
+    null,
+  );
+}
+
+void enableFallbackFonts() {
+  _enableFallbackFonts.callAsFunction(
+    null,
   );
 }

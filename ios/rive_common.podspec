@@ -108,13 +108,14 @@ Rive 2 Flutter Runtime. This package provides runtime functionality for playing 
   s.pod_target_xcconfig = {
     "DEFINES_MODULE" => "YES",
     "EXCLUDED_ARCHS[sdk=iphonesimulator*]" => "i386",
-    "OTHER_CFLAGS" => "-DYOGA_EXPORT= -DSB_CONFIG_UNITY -DWITH_RIVE_TEXT -DWITH_RIVE_AUDIO -DHAVE_OT -DHB_NO_FALLBACK_SHAPE -DHB_NO_WIN1256 -Wno-documentation -Wno-comma -Wno-unreachable-code -Wno-shorten-64-to-32",
-    "OTHER_CPLUSPLUSFLAGS" => "-DYOGA_EXPORT= -DWITH_RIVE_TEXT -DWITH_RIVE_AUDIO -DHAVE_OT -DHB_NO_FALLBACK_SHAPE -DHB_NO_WIN1256 -Wno-conditional-uninitialized -Wno-documentation -Wno-comma -Wno-unreachable-code -Wno-shorten-64-to-32 -std=c++11",
+    "OTHER_CFLAGS" => "-DYOGA_EXPORT= -DSB_CONFIG_UNITY -DWITH_RIVE_TEXT -DWITH_RIVE_AUDIO_TOOLS -DWITH_RIVE_AUDIO -DMA_NO_RESOURCE_MANAGER -DMA_NO_RESOURCE_MANAGER -DMA_NO_RESOURCE_MANAGER -DHAVE_OT -DHB_NO_FALLBACK_SHAPE -DHB_NO_WIN1256 -DHB_NO_CFF -DHB_NO_BUFFER_VERIFY -DHB_NO_BUFFER_MESSAGE -DHB_NO_PAINT -DHB_NO_MMAP -DHB_NO_META -Wno-documentation -Wno-comma -Wno-unreachable-code -Wno-shorten-64-to-32",
+    "OTHER_CPLUSPLUSFLAGS" => "-DYOGA_EXPORT= -DWITH_RIVE_TEXT -DWITH_RIVE_AUDIO_TOOLS -DWITH_RIVE_AUDIO -DMA_NO_RESOURCE_MANAGER -DMA_NO_RESOURCE_MANAGER -DMA_NO_RESOURCE_MANAGER -DHAVE_OT -DHB_NO_FALLBACK_SHAPE -DHB_NO_WIN1256 -Wno-conditional-uninitialized -Wno-documentation -Wno-comma -Wno-unreachable-code -Wno-shorten-64-to-32 -std=c++11",
     "USER_HEADER_SEARCH_PATHS" => '"$(PODS_TARGET_SRCROOT)/miniaudio" "$(PODS_TARGET_SRCROOT)/SheenBidi/Headers" "$(PODS_TARGET_SRCROOT)/harfbuzz/src" "$(PODS_TARGET_SRCROOT)/rive-cpp/include" "$(PODS_TARGET_SRCROOT)/rive-cpp/skia/renderer/include"',
     "HEADER_SEARCH_PATHS" => '"$(PODS_TARGET_SRCROOT)/yoga"',
-    "OTHER_CPLUSPLUSFLAGS[config=Release]" => "-DNDEBUG -DYOGA_EXPORT= -DWITH_RIVE_TEXT -DWITH_RIVE_AUDIO -DHAVE_OT -DHB_NO_FALLBACK_SHAPE -DHB_NO_WIN1256 -Wno-conditional-uninitialized -Wno-documentation -Wno-comma -Wno-unreachable-code -Wno-shorten-64-to-32 -std=c++11",
+    "OTHER_CPLUSPLUSFLAGS[config=Release]" => "-DNDEBUG -DYOGA_EXPORT= -DWITH_RIVE_TEXT -DWITH_RIVE_AUDIO_TOOLS -DWITH_RIVE_AUDIO -DMA_NO_RESOURCE_MANAGER -DMA_NO_RESOURCE_MANAGER -DMA_NO_RESOURCE_MANAGER -DHAVE_OT -DHB_NO_FALLBACK_SHAPE -DHB_NO_WIN1256 -Wno-conditional-uninitialized -Wno-documentation -Wno-comma -Wno-unreachable-code -Wno-shorten-64-to-32 -std=c++11",
     "CLANG_CXX_LANGUAGE_STANDARD" => "c++11",
     "CLANG_CXX_LIBRARY" => "libc++",
   }
   s.swift_version = "5.0"
+  s.resource_bundles = {'rive_common_privacy' => ['Resources/PrivacyInfo.xcprivacy']}
 end

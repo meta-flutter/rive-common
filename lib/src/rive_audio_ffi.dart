@@ -1,54 +1,17 @@
 import 'dart:async';
 import 'dart:collection';
 import 'dart:ffi';
-import 'dart:io';
-import 'dart:typed_data';
 
-import 'package:rive_common/platform.dart' as rive;
+import 'package:flutter/foundation.dart';
 import 'package:rive_common/rive_audio.dart';
+import 'package:rive_common/src/dynamic_library_helper.dart';
 
-final DynamicLibrary nativeLib = _loadLibrary();
-
-DynamicLibrary _loadLibrary() {
-  if (rive.Platform.instance.isTesting) {
-    var paths = [
-      '',
-      '../../packages/rive_common/',
-    ];
-    if (Platform.isMacOS) {
-      for (final path in paths) {
-        try {
-          return DynamicLibrary.open(
-            '${path}shared_lib/build/bin/debug/librive_text.dylib',
-          );
-
-          // ignore: avoid_catching_errors
-        } on ArgumentError catch (_) {}
-      }
-    } else if (Platform.isLinux) {
-      for (final path in paths) {
-        try {
-          return DynamicLibrary.open(
-            '${path}shared_lib/build/bin/debug/librive_text.so',
-          );
-          // ignore: avoid_catching_errors
-        } on ArgumentError catch (_) {}
-      }
-    }
-  }
-
-  if (Platform.isAndroid) {
-    return DynamicLibrary.open('librive_text.so');
-  } else if (Platform.isWindows) {
-    return DynamicLibrary.open('rive_common_plugin.dll');
-  }
-  return DynamicLibrary.process();
-}
+DynamicLibrary get _nativeLib => RiveDynamicLibraryHelper.nativeLib;
 
 final Pointer<Void> Function(
   int numChannels,
   int sampleRate,
-) makeAudioEngine = nativeLib
+) makeAudioEngine = _nativeLib
     .lookup<
         NativeFunction<
             Pointer<Void> Function(
@@ -59,7 +22,7 @@ final Pointer<Void> Function(
 
 final int Function(
   Pointer<Void> engine,
-) engineTime = nativeLib
+) engineTime = _nativeLib
     .lookup<
         NativeFunction<
             Uint64 Function(
@@ -67,9 +30,29 @@ final int Function(
             )>>('engineTime')
     .asFunction();
 
+final void Function(
+  Pointer<Void> engine,
+) engineInitLevelMonitor = _nativeLib
+    .lookup<
+        NativeFunction<
+            Void Function(
+              Pointer<Void>,
+            )>>('engineInitLevelMonitor')
+    .asFunction();
+
+final double Function(Pointer<Void> engine, int channel) engineLevel =
+    _nativeLib
+        .lookup<
+            NativeFunction<
+                Float Function(
+                  Pointer<Void>,
+                  Uint32,
+                )>>('engineLevel')
+        .asFunction();
+
 final int Function(
   Pointer<Void> engine,
-) engineNumChannels = nativeLib
+) engineNumChannels = _nativeLib
     .lookup<
         NativeFunction<
             Uint32 Function(
@@ -79,7 +62,7 @@ final int Function(
 
 final int Function(
   Pointer<Void> engine,
-) engineSampleRate = nativeLib
+) engineSampleRate = _nativeLib
     .lookup<
         NativeFunction<
             Uint32 Function(
@@ -89,7 +72,7 @@ final int Function(
 
 final int Function(
   Pointer<Void> engine,
-) audioSourceNumChannels = nativeLib
+) audioSourceNumChannels = _nativeLib
     .lookup<
         NativeFunction<
             Uint32 Function(
@@ -99,7 +82,7 @@ final int Function(
 
 final int Function(
   Pointer<Void> engine,
-) audioSourceSampleRate = nativeLib
+) audioSourceSampleRate = _nativeLib
     .lookup<
         NativeFunction<
             Uint32 Function(
@@ -109,7 +92,7 @@ final int Function(
 
 final int Function(
   Pointer<Void> engine,
-) audioSourceFormat = nativeLib
+) audioSourceFormat = _nativeLib
     .lookup<
         NativeFunction<
             Uint32 Function(
@@ -119,7 +102,7 @@ final int Function(
 
 final void Function(
   Pointer<Void> engine,
-) unrefAudioEngine = nativeLib
+) unrefAudioEngine = _nativeLib
     .lookup<
         NativeFunction<
             Void Function(
@@ -129,7 +112,7 @@ final void Function(
 
 final void Function(
   Pointer<Void> engine,
-) unrefAudioSound = nativeLib
+) unrefAudioSound = _nativeLib
     .lookup<
         NativeFunction<
             Void Function(
@@ -139,7 +122,7 @@ final void Function(
 
 final Pointer<SimpleUint8Array> Function(
   int length,
-) makeAudioSourceBuffer = nativeLib
+) makeAudioSourceBuffer = _nativeLib
     .lookup<
         NativeFunction<
             Pointer<SimpleUint8Array> Function(
@@ -149,7 +132,7 @@ final Pointer<SimpleUint8Array> Function(
 
 final Pointer<Void> Function(
   Pointer<SimpleUint8Array>,
-) makeAudioSource = nativeLib
+) makeAudioSource = _nativeLib
     .lookup<
         NativeFunction<
             Pointer<Void> Function(
@@ -163,7 +146,7 @@ final Pointer<Void> Function(
   int,
   int,
   int,
-) playAudioSource = nativeLib
+) playAudioSource = _nativeLib
     .lookup<
         NativeFunction<
             Pointer<Void> Function(
@@ -178,7 +161,7 @@ final Pointer<Void> Function(
 final void Function(
   Pointer<Void>,
   int,
-) stopAudioSound = nativeLib
+) stopAudioSound = _nativeLib
     .lookup<
         NativeFunction<
             Void Function(
@@ -187,9 +170,41 @@ final void Function(
             )>>('stopAudioSound')
     .asFunction();
 
+final double Function(
+  Pointer<Void>,
+) getSoundVolume = _nativeLib
+    .lookup<
+        NativeFunction<
+            Float Function(
+              Pointer<Void>,
+            )>>('getSoundVolume')
+    .asFunction();
+
+final bool Function(
+  Pointer<Void>,
+) getSoundCompleted = _nativeLib
+    .lookup<
+        NativeFunction<
+            Bool Function(
+              Pointer<Void>,
+            )>>('getSoundCompleted')
+    .asFunction();
+
+final void Function(
+  Pointer<Void>,
+  double,
+) setSoundVolume = _nativeLib
+    .lookup<
+        NativeFunction<
+            Void Function(
+              Pointer<Void>,
+              Float,
+            )>>('setSoundVolume')
+    .asFunction();
+
 final void Function(
   Pointer<Void> nativeAudioSource,
-) unrefAudioSource = nativeLib
+) unrefAudioSource = _nativeLib
     .lookup<
         NativeFunction<
             Void Function(
@@ -201,7 +216,7 @@ final Pointer<Void> Function(
   Pointer<Void> source,
   int,
   int,
-) makeAudioReader = nativeLib
+) makeAudioReader = _nativeLib
     .lookup<
         NativeFunction<
             Pointer<Void> Function(
@@ -213,7 +228,7 @@ final Pointer<Void> Function(
 
 final SamplesSpan Function(
   Pointer<Void> reader,
-) audioReaderRead = nativeLib
+) audioReaderRead = _nativeLib
     .lookup<NativeFunction<SamplesSpan Function(Pointer<Void>)>>(
         'audioReaderRead')
     .asFunction();
@@ -222,7 +237,7 @@ final Pointer<Void> Function(
   Pointer<Void> decodeWork,
   int,
   int,
-) makeBufferedAudioSource = nativeLib
+) makeBufferedAudioSource = _nativeLib
     .lookup<
         NativeFunction<
             Pointer<Void> Function(
@@ -234,14 +249,14 @@ final Pointer<Void> Function(
 
 final SamplesSpan Function(
   Pointer<Void> audioSource,
-) bufferedAudioSamples = nativeLib
+) bufferedAudioSamples = _nativeLib
     .lookup<NativeFunction<SamplesSpan Function(Pointer<Void>)>>(
         'bufferedAudioSamples')
     .asFunction();
 
 final void Function(
   Pointer<Void> nativeAudioSource,
-) unrefAudioReader = nativeLib
+) unrefAudioReader = _nativeLib
     .lookup<
         NativeFunction<
             Void Function(
@@ -251,7 +266,7 @@ final void Function(
 
 final int Function(
   Pointer<Void> nativeAudioSource,
-) audioReaderLength = nativeLib
+) audioReaderLength = _nativeLib
     .lookup<
         NativeFunction<
             Uint64 Function(
@@ -303,6 +318,15 @@ class AudioSoundFFI extends AudioSound {
     unrefAudioSound(nativePtr);
     nativePtr = nullptr;
   }
+
+  @override
+  double get volume => getSoundVolume(nativePtr);
+
+  @override
+  set volume(double value) => setSoundVolume(nativePtr, value);
+
+  @override
+  bool get completed => getSoundCompleted(nativePtr);
 }
 
 class AudioEngineFFI extends AudioEngine {
@@ -352,11 +376,17 @@ class AudioEngineFFI extends AudioEngine {
       sampleRate,
     );
   }
+
+  @override
+  void monitorLevels() => engineInitLevelMonitor(nativePtr);
+
+  @override
+  double level(int channel) => engineLevel(nativePtr, channel);
 }
 
 class SimpleUint8Array extends Struct {
   external Pointer<Uint8> data;
-  @Uint64()
+  @Size()
   external int size;
 }
 
@@ -415,8 +445,13 @@ class StreamingAudioSourceFFI extends StreamingAudioSource with AudioSourceFFI {
     nativePtr = nullptr;
   }
 
+  static int _bufferingCount = 0;
+  @visibleForTesting
+  static bool get isBuffering => _bufferingCount > 0;
+
   @override
   Future<BufferedAudioSource> makeBuffered({int? channels, int? sampleRate}) {
+    _bufferingCount++;
     var decodeChannels = channels ?? this.channels;
     var decodeWorkPtr = makeAudioReader(
       nativePtr,
@@ -442,6 +477,7 @@ class StreamingAudioSourceFFI extends StreamingAudioSource with AudioSourceFFI {
 
           var samplesSpan = bufferedAudioSamples(nativeBufferedSource);
 
+          _bufferingCount--;
           completer.complete(
             BufferedAudioSourceFFI(
               nativeBufferedSource,

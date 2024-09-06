@@ -1,7 +1,7 @@
 dofile('rive_build_config.lua')
 
 local dependency = require('dependency')
-harfbuzz = dependency.github('rive-app/harfbuzz', 'rive_8.3.0')
+harfbuzz = dependency.github('rive-app/harfbuzz', 'rive_8.4.0')
 
 newoption({
     trigger = 'no-harfbuzz-renames',
@@ -224,7 +224,29 @@ do
 
     warnings('Off')
 
-    defines({ 'HAVE_OT', 'HB_NO_FALLBACK_SHAPE', 'HB_NO_WIN1256', 'HB_NO_EXTERN_HELPERS' })
+    defines({
+        'HB_ONLY_ONE_SHAPER', -- added this for Geotech Mac multi-module issue: https://github.com/rive-app/rive-cpp/issues/369
+        'HAVE_OT',
+        'HB_NO_FALLBACK_SHAPE',
+        'HB_NO_WIN1256',
+        'HB_NO_EXTERN_HELPERS',
+        'HB_DISABLE_DEPRECATED',
+        'HB_NO_COLOR',
+        'HB_NO_BITMAP',
+        'HB_NO_BUFFER_SERIALIZE',
+        'HB_NO_BUFFER_VERIFY',
+        'HB_NO_BUFFER_MESSAGE',
+        'HB_NO_SETLOCALE',
+        'HB_NO_STYLE',
+        'HB_NO_VERTICAL',
+        'HB_NO_LAYOUT_COLLECT_GLYPHS',
+        'HB_NO_LAYOUT_RARELY_USED',
+        'HB_NO_LAYOUT_UNUSED',
+        'HB_NO_OT_FONT_GLYPH_NAMES',
+        'HB_NO_PAINT',
+        'HB_NO_MMAP',
+        'HB_NO_META',
+    })
 
     filter('toolset:not msc')
     do
@@ -251,5 +273,11 @@ do
     do
         includedirs({ './' })
         forceincludes({ 'rive_harfbuzz_renames.h' })
+    end
+
+    filter('system:macosx or system:ios')
+    do
+        defines({ 'HAVE_CORETEXT' })
+        files({ harfbuzz .. '/src/hb-coretext.cc' })
     end
 end

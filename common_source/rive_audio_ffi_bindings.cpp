@@ -39,6 +39,24 @@ EXPORT uint64_t engineTime(rive::AudioEngine* engine)
     return engine->timeInFrames();
 }
 
+EXPORT void engineInitLevelMonitor(rive::AudioEngine* engine)
+{
+    if (engine == nullptr)
+    {
+        return;
+    }
+    engine->initLevelMonitor();
+}
+
+EXPORT float engineLevel(rive::AudioEngine* engine, uint32_t channel)
+{
+    if (engine == nullptr)
+    {
+        return 0.0f;
+    }
+    return engine->level(channel);
+}
+
 EXPORT uint32_t numChannels(rive::AudioEngine* engine)
 {
     if (engine == nullptr)
@@ -178,6 +196,33 @@ EXPORT void stopAudioSound(rive::AudioSound* sound, uint64_t fadeTimeInFrames)
         return;
     }
     sound->stop(fadeTimeInFrames);
+}
+
+EXPORT float getSoundVolume(rive::AudioSound* sound)
+{
+    if (sound == nullptr)
+    {
+        return 0.0f;
+    }
+    return sound->volume();
+}
+
+EXPORT bool getSoundCompleted(rive::AudioSound* sound)
+{
+    if (sound == nullptr)
+    {
+        return true;
+    }
+    return sound->completed();
+}
+
+EXPORT void setSoundVolume(rive::AudioSound* sound, float volume)
+{
+    if (sound == nullptr)
+    {
+        return;
+    }
+    sound->volume(volume);
 }
 
 EXPORT rive::AudioSound* playAudioSource(rive::AudioSource* audioSource,

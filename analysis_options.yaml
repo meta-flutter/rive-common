@@ -16,7 +16,6 @@ analyzer:
 linter:
   rules:
     - always_put_required_named_parameters_first
-    - always_require_non_null_named_parameters
     - annotate_overrides
     # - avoid_annotating_with_dynamic
     - avoid_bool_literals_in_conditional_expressions
@@ -32,8 +31,6 @@ linter:
     - avoid_null_checks_in_equality_operators
     - avoid_relative_lib_imports
     - avoid_return_types_on_setters
-    - avoid_returning_null
-    - avoid_returning_null_for_future
     - avoid_returning_null_for_void
     - avoid_returning_this
     - avoid_setters_without_getters
@@ -58,12 +55,10 @@ linter:
     - hash_and_equals
     - implementation_imports
     #  - invariant_booleans # too many false positives: https://github.com/dart-lang/linter/issues/811
-    - iterable_contains_unrelated_type
     - join_return_with_assignment
     - library_names
     - library_prefixes
     - lines_longer_than_80_chars
-    - list_remove_unrelated_type
     # - literal_only_boolean_expressions # too many false positives: https://github.com/dart-lang/sdk/issues/34181
     - no_adjacent_strings_in_list
     - no_duplicate_case_values

@@ -30,11 +30,24 @@ class Definition {
       properties.where((property) => property.getExportType().storesData);
 
   Definition? _extensionOf;
+  Definition? _rawExtensionOf;
   Key? _key;
   bool _isAbstract = false;
   bool _editorOnly = false;
   bool _forRuntime = true;
   bool get forRuntime => _forRuntime;
+
+  Definition? getRuntimeExtensionOf(Definition? definition) {
+    var extensionOf = definition;
+    if (extensionOf != null) {
+      if (extensionOf._forRuntime) {
+        return extensionOf;
+      }
+      return getRuntimeExtensionOf(extensionOf._extensionOf);
+    }
+    return extensionOf;
+  }
+
   static Definition? make(String filename) {
     var definition = definitions[filename];
     if (definition != null) {
@@ -61,7 +74,8 @@ class Definition {
   Definition.fromFilename(this._filename, Map<String, dynamic> data) {
     dynamic extendsFilename = data['extends'];
     if (extendsFilename is String) {
-      _extensionOf = Definition.make(extendsFilename);
+      _rawExtensionOf = Definition.make(extendsFilename);
+      _extensionOf = getRuntimeExtensionOf(_rawExtensionOf);
     }
     dynamic nameValue = data['name'];
     if (nameValue is String) {
@@ -169,6 +183,11 @@ class Definition {
       for (final property in properties) {
         code.writeln('static const uint16_t ${property.name}PropertyKey = '
             '${property.key!.intValue};');
+        for (final altKey in property.key!.alternates) {
+          code.writeln(
+              'static const uint16_t ${altKey.stringValue}PropertyKey = '
+              '${altKey.intValue};');
+        }
       }
       if (storedProperties.any((prop) => !prop.isEncoded)) {
         code.writeln('private:');
@@ -220,20 +239,26 @@ class Definition {
               (property.isSetOverride ? 'override' : '') +
               '= 0;');
         } else {
-          code.writeln((property.isVirtual ? 'virtual' : 'inline') +
+          code.writeln(((property.isVirtual || property.isPureVirtual)
+                  ? 'virtual'
+                  : 'inline') +
               ' ${property.type.cppGetterName} ${property.name}() const ' +
               (property.isGetOverride ? 'override' : '') +
               '{ return m_${property.capitalizedName}; }');
-
-          code.writeln(
-              'void ${property.name}(${property.type.cppName} value) ' +
-                  (property.isSetOverride ? 'override' : '') +
-                  '{'
-                      'if(m_${property.capitalizedName} == value)'
-                      '{return;}'
-                      'm_${property.capitalizedName} = value;'
-                      '${property.name}Changed();'
-                      '}');
+          if (!property.isPureVirtual) {
+            code.writeln(
+                'void ${property.name}(${property.type.cppName} value) ' +
+                    (property.isSetOverride ? 'override' : '') +
+                    '{'
+                        'if(m_${property.capitalizedName} == value)'
+                        '{return;}'
+                        'm_${property.capitalizedName} = value;'
+                        '${property.name}Changed();'
+                        '}');
+          } else {
+            code.writeln(
+                'virtual void ${property.name}(${property.type.cppName} value) = 0;');
+          }
         }
 
         code.writeln();
@@ -466,6 +491,12 @@ class Definition {
         for (final property in properties) {
           ctxCode.writeln('case ${property.definition.name}Base'
               '::${property.name}PropertyKey:');
+          if (property.key != null) {
+            for (final altKey in property.key!.alternates) {
+              ctxCode.writeln('case ${property.definition.name}Base'
+                  '::${altKey.stringValue}PropertyKey:');
+            }
+          }
           ctxCode.writeln('object->as<${property.definition.name}Base>()->'
               '${property.name}(value);');
           ctxCode.writeln('break;');
@@ -486,6 +517,10 @@ class Definition {
         for (final property in properties) {
           ctxCode.writeln('case ${property.definition.name}Base'
               '::${property.name}PropertyKey:');
+          for (final altKey in property.key!.alternates) {
+            ctxCode.writeln('case ${property.definition.name}Base'
+                '::${altKey.stringValue}PropertyKey:');
+          }
           ctxCode
               .writeln('return object->as<${property.definition.name}Base>()->'
                   '${property.name}();');
@@ -508,6 +543,10 @@ class Definition {
         for (final property in properties) {
           ctxCode.writeln('case ${property.definition.name}Base'
               '::${property.name}PropertyKey:');
+          for (final altKey in property.key!.alternates) {
+            ctxCode.writeln('case ${property.definition.name}Base'
+                '::${altKey.stringValue}PropertyKey:');
+          }
         }
       }
       ctxCode.writeln('return Core${fieldType.capitalizedName}Type::id;');
@@ -537,6 +576,26 @@ class Definition {
     ctxCode.writeln('default:return false;');
     ctxCode.writeln('}}');
 
+    // static bool objectSupportsProperty(Core* object, uint32_t propertyKey) { return true; }
+    ctxCode.writeln('''
+      static bool objectSupportsProperty(Core* object, uint32_t propertyKey) {
+        switch(propertyKey) {''');
+    for (final fieldType in usedFieldTypes.keys) {
+      var properties = getSetFieldTypes[fieldType];
+      if (properties != null) {
+        for (final property in properties) {
+          ctxCode.writeln('case ${property.definition.name}Base'
+              '::${property.name}PropertyKey:');
+          for (final altKey in property.key!.alternates) {
+            ctxCode.writeln('case ${property.definition.name}Base'
+                '::${altKey.stringValue}PropertyKey:');
+          }
+          ctxCode
+              .writeln('return object->is<${property.definition.name}Base>();');
+        }
+      }
+    }
+    ctxCode.writeln('}return false;}');
     ctxCode.writeln('};}');
 
     var output = generatedHppPath;

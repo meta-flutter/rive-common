@@ -4,7 +4,7 @@
 #include "rive/importers/backboard_importer.hpp"
 #include "rive/assets/file_asset.hpp"
 #include "rive/assets/image_asset.hpp"
-#include "rive/shapes/mesh.hpp"
+#include "rive/shapes/mesh_drawable.hpp"
 #include "rive/artboard.hpp"
 #include "rive/clip_result.hpp"
 
@@ -24,7 +24,7 @@ void Image::draw(Renderer* renderer)
         return;
     }
 
-    ClipResult clipResult = clip(renderer);
+    ClipResult clipResult = applyClip(renderer);
 
     if (clipResult == ClipResult::noClip)
     {
@@ -104,7 +104,7 @@ void Image::setAsset(FileAsset* asset)
         // the mesh buffers.
         if (m_Mesh != nullptr && !artboard()->isInstance())
         {
-            m_Mesh->initializeSharedBuffers(imageAsset()->renderImage());
+            m_Mesh->onAssetLoaded(imageAsset()->renderImage());
         }
     }
 }
@@ -119,5 +119,87 @@ Core* Image::clone() const
     return twin;
 }
 
-void Image::setMesh(Mesh* mesh) { m_Mesh = mesh; }
-Mesh* Image::mesh() const { return m_Mesh; }
+void Image::setMesh(MeshDrawable* mesh) { m_Mesh = mesh; }
+
+float Image::width() const
+{
+    rive::ImageAsset* asset = this->imageAsset();
+    if (asset == nullptr)
+    {
+        return 0.0f;
+    }
+
+    rive::RenderImage* renderImage = asset->renderImage();
+    if (renderImage == nullptr)
+    {
+        return 0.0f;
+    }
+    return renderImage->width();
+}
+
+float Image::height() const
+{
+    rive::ImageAsset* asset = this->imageAsset();
+    if (asset == nullptr)
+    {
+        return 0.0f;
+    }
+
+    rive::RenderImage* renderImage = asset->renderImage();
+    if (renderImage == nullptr)
+    {
+        return 0.0f;
+    }
+    return renderImage->height();
+}
+
+Vec2D Image::measureLayout(float width,
+                           LayoutMeasureMode widthMode,
+                           float height,
+                           LayoutMeasureMode heightMode)
+{
+    float measuredWidth, measuredHeight;
+    switch (widthMode)
+    {
+        case LayoutMeasureMode::atMost:
+            measuredWidth = std::max(Image::width(), width);
+            break;
+        case LayoutMeasureMode::exactly:
+            measuredWidth = width;
+            break;
+        case LayoutMeasureMode::undefined:
+            measuredWidth = Image::width();
+            break;
+    }
+    switch (heightMode)
+    {
+        case LayoutMeasureMode::atMost:
+            measuredHeight = std::max(Image::height(), height);
+            break;
+        case LayoutMeasureMode::exactly:
+            measuredHeight = height;
+            break;
+        case LayoutMeasureMode::undefined:
+            measuredHeight = Image::height();
+            break;
+    }
+    return Vec2D(measuredWidth, measuredHeight);
+}
+
+void Image::controlSize(Vec2D size)
+{
+    auto renderImage = imageAsset()->renderImage();
+    auto newScaleX = size.x / renderImage->width();
+    auto newScaleY = size.y / renderImage->height();
+    if (newScaleX != scaleX() || newScaleY != scaleY())
+    {
+        scaleX(newScaleX);
+        scaleY(newScaleY);
+        addDirt(ComponentDirt::WorldTransform, false);
+    }
+}
+
+#ifdef TESTING
+#include "rive/shapes/mesh.hpp"
+Mesh* Image::mesh() const { return static_cast<Mesh*>(m_Mesh); };
+#endif

@@ -8,7 +8,10 @@
 #include "rive/animation/state_transition.hpp"
 #include "rive/animation/transition_condition.hpp"
 #include "rive/animation/transition_trigger_condition.hpp"
+#include "rive/animation/transition_input_condition.hpp"
+#include "rive/animation/transition_viewmodel_condition.hpp"
 #include "rive/animation/state_machine_instance.hpp"
+#include "rive/animation/transition_property_viewmodel_comparator.hpp"
 #include "rive/importers/import_stack.hpp"
 #include "rive/importers/layer_state_importer.hpp"
 
@@ -147,11 +150,8 @@ AllowTransition StateTransition::allowed(StateInstance* stateFrom,
 
     for (auto condition : m_Conditions)
     {
-        // N.B. state machine instance sanitizes these for us...
-        auto input = stateMachineInstance->input(condition->inputId());
-
         if ((ignoreTriggers && condition->is<TransitionTriggerCondition>()) ||
-            !condition->evaluate(input))
+            !condition->evaluate(stateMachineInstance))
         {
             return AllowTransition::no;
         }

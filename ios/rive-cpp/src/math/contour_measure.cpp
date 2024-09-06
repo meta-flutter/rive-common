@@ -34,7 +34,7 @@ ContourMeasure::ContourMeasure(std::vector<Segment>&& segs,
 // or the last segment if distance == m_distance
 size_t ContourMeasure::findSegment(float distance) const
 {
-    assert(m_segments.front().m_distance > 0);
+    assert(m_segments.front().m_distance >= 0);
     assert(m_segments.back().m_distance == m_length);
 
     assert(distance >= 0 && distance <= m_length);
@@ -66,6 +66,27 @@ static ContourMeasure::PosTan eval_quad(const Vec2D pts[], float t)
 static ContourMeasure::PosTan eval_cubic(const Vec2D pts[], float t)
 {
     assert(t >= 0 && t <= 1);
+    // When t==0 and t==1, the most accurate way to find tangents is by differencing.
+    if (t == 0 || t == 1)
+    {
+        if (t == 0)
+        {
+            return {pts[0],
+                    (pts[0] != pts[1]   ? pts[1]
+                     : pts[1] != pts[2] ? pts[2]
+                                        : pts[3]) -
+                        pts[0]
+
+            };
+        }
+        else
+        {
+            return {pts[3],
+                    pts[3] - (pts[3] != pts[2]   ? pts[2]
+                              : pts[2] != pts[1] ? pts[1]
+                                                 : pts[0])};
+        }
+    }
 
     const EvalCubic eval(pts);
 
@@ -139,11 +160,9 @@ void ContourMeasure::Segment::extract(RawPath* dst,
 ContourMeasure::PosTan ContourMeasure::getPosTan(float distance) const
 {
     // specal-case end of the contour
-    if (distance >= m_length)
+    if (distance > m_length)
     {
-        size_t N = m_points.size();
-        assert(N > 1);
-        return {m_points[N - 1], (m_points[N - 1] - m_points[N - 2]).normalized()};
+        distance = m_length;
     }
 
     if (distance < 0)
@@ -228,9 +247,12 @@ static float compute_t(Span<const ContourMeasure::Segment> segs, size_t index, f
         }
     }
 
-    assert(prevDist < seg.m_distance);
+    assert(prevDist <= seg.m_distance);
     const auto ratio = (distance - prevDist) / (seg.m_distance - prevDist);
-    return lerp(prevT, seg.getT(), ratio);
+    float t = lerp(prevT, seg.getT(), ratio);
+    t = math::clamp(t, prevT, seg.getT());
+    assert(prevT <= t && t <= seg.getT());
+    return t;
 }
 
 void ContourMeasure::getSegment(float startDist,
@@ -347,16 +369,16 @@ float ContourMeasureIter::addCubicSegs(ContourMeasure::Segment* segs,
     return distance;
 }
 
-void ContourMeasureIter::rewind(const RawPath& path, float tolerance)
+void ContourMeasureIter::rewind(const RawPath* path, float tolerance)
 {
-    m_iter = path.begin();
-    m_end = path.end();
-    m_srcPoints = path.points().data();
+    m_iter = path->begin();
+    m_end = path->end();
+    m_srcPoints = path->points().data();
 
     constexpr float kMinTolerance = 1.0f / 16;
     m_invTolerance = 1.0f / std::max(tolerance, kMinTolerance);
 
-    m_segmentCounts.resize(path.verbs().count());
+    m_segmentCounts.resize(path->verbs().count());
 }
 
 // Can return null if either it encountered an empty contour (length == 0)
@@ -496,12 +518,15 @@ rcp<ContourMeasure> ContourMeasureIter::tryNext()
 
     m_iter = endOfContour;
 
-    if (distance == 0 || pts.size() < 2)
+    if (distance > 0 && pts.size() >= 2)
     {
-        return nullptr;
+        assert(!std::isnan(distance));
+        return rcp<ContourMeasure>(
+            new ContourMeasure(std::move(segs), std::move(pts), distance, isClosed));
     }
-    return rcp<ContourMeasure>(
-        new ContourMeasure(std::move(segs), std::move(pts), distance, isClosed));
+
+    assert(distance == 0 || std::isnan(distance));
+    return nullptr;
 }
 
 rcp<ContourMeasure> ContourMeasureIter::next()
@@ -518,5 +543,6 @@ rcp<ContourMeasure> ContourMeasureIter::next()
             break;
         }
     }
+    assert(!cm || !std::isnan(cm->length()));
     return cm;
 }

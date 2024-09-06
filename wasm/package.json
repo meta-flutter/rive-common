@@ -1,6 +1,6 @@
 {
     "name": "@rive-app/flutter-wasm",
-    "version": "19.0.0",
+    "version": "39.0.0",
     "description": "WASM portion of Rive's Flutter runtime.",
     "homepage": "https://rive.app",
     "private": false,
@@ -22,6 +22,8 @@
     "keywords": [],
     "files": [
         "build/bin/release/rive_text.js",
-        "build/bin/release/rive_text.wasm"
+        "build/bin/release/rive_text.wasm",
+        "build/bin/release/simd/rive_text.js",
+        "build/bin/release/simd/rive_text.wasm"
     ]
 }

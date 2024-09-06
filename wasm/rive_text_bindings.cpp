@@ -155,6 +155,10 @@ void deleteFontFeatures(WasmPtr features)
     delete reinterpret_cast<rive::SimpleArray<uint32_t>*>(features);
 }
 
+void disableFallbackFonts() { rive::Font::gFallbackProcEnabled = false; }
+
+void enableFallbackFonts() { rive::Font::gFallbackProcEnabled = true; }
+
 std::vector<rive::Font*> fallbackFonts;
 
 void setFallbackFonts(emscripten::val fontsList)
@@ -318,6 +322,8 @@ EMSCRIPTEN_BINDINGS(RiveText)
     function("makeFontWithOptions", &makeFontWithOptions);
     function("fontFeatures", &fontFeatures);
     function("deleteFontFeatures", &deleteFontFeatures);
+    function("disableFallbackFonts", &disableFallbackFonts);
+    function("enableFallbackFonts", &enableFallbackFonts);
 
     function("fontAscent", &fontAscent);
     function("fontDescent", &fontDescent);

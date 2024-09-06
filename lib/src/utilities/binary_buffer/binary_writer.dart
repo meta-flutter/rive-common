@@ -21,6 +21,10 @@ class BinaryWriter {
   late ByteData _byteData;
   int _writeIndex = 0;
   int get size => _writeIndex;
+  int get maxSize => _buffer.length;
+  set writeIndex(int value) => _writeIndex = value;
+  // ignore: unnecessary_getters_setters
+  int get writeIndex => _writeIndex;
 
   BinaryWriter({int alignment = 1024, this.endian = Endian.little})
       : _alignment = max(1, alignment) {

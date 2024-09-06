@@ -36,6 +36,26 @@ uint32_t engineTime(WasmPtr enginePtr)
     return engine->timeInFrames();
 }
 
+void engineInitLevelMonitor(WasmPtr enginePtr)
+{
+    rive::AudioEngine* engine = (rive::AudioEngine*)enginePtr;
+    if (engine == nullptr)
+    {
+        return;
+    }
+    engine->initLevelMonitor();
+}
+
+float engineLevel(WasmPtr enginePtr, uint32_t channel)
+{
+    rive::AudioEngine* engine = (rive::AudioEngine*)enginePtr;
+    if (engine == nullptr)
+    {
+        return 0.0f;
+    }
+    return engine->level(channel);
+}
+
 uint32_t audioSourceNumChannels(WasmPtr sourcePtr)
 {
     rive::AudioSource* source = (rive::AudioSource*)sourcePtr;
@@ -283,6 +303,36 @@ void stopAudioSound(WasmPtr soundPtr, uint32_t fadeTimeInFrames)
     sound->stop(fadeTimeInFrames);
 }
 
+float getSoundVolume(WasmPtr soundPtr)
+{
+    rive::AudioSound* sound = (rive::AudioSound*)soundPtr;
+    if (sound == nullptr)
+    {
+        return 0.0f;
+    }
+    return sound->volume();
+}
+
+bool getSoundCompleted(WasmPtr soundPtr)
+{
+    rive::AudioSound* sound = (rive::AudioSound*)soundPtr;
+    if (sound == nullptr)
+    {
+        return true;
+    }
+    return sound->completed();
+}
+
+void setSoundVolume(WasmPtr soundPtr, float volume)
+{
+    rive::AudioSound* sound = (rive::AudioSound*)soundPtr;
+    if (sound == nullptr)
+    {
+        return;
+    }
+    sound->volume(volume);
+}
+
 void unrefAudioSound(WasmPtr soundPtr)
 {
     rive::AudioSound* sound = (rive::AudioSound*)soundPtr;
@@ -325,6 +375,8 @@ EMSCRIPTEN_BINDINGS(RiveAudio)
 
     function("makeAudioEngine", &makeAudioEngine);
     function("engineTime", &engineTime);
+    function("engineInitLevelMonitor", &engineInitLevelMonitor);
+    function("engineLevel", &engineLevel);
     function("numChannels", &numChannels);
     function("sampleRate", &sampleRate);
     function("audioSourceNumChannels", &audioSourceNumChannels);
@@ -345,5 +397,8 @@ EMSCRIPTEN_BINDINGS(RiveAudio)
     function("playAudioSource", &playAudioSource);
     function("audioReaderRead", &audioReaderRead);
     function("stopAudioSound", &stopAudioSound);
+    function("getSoundVolume", &getSoundVolume);
+    function("getSoundCompleted", &getSoundCompleted);
+    function("setSoundVolume", &setSoundVolume);
     function("unrefAudioSound", &unrefAudioSound);
 }

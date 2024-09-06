@@ -1,64 +1,35 @@
 import 'dart:collection';
 import 'dart:ffi';
-import 'dart:io';
 
 import 'package:ffi/ffi.dart';
 import 'package:rive_common/layout_engine.dart';
-import 'package:rive_common/platform.dart' as rive;
+import 'package:rive_common/src/dynamic_library_helper.dart';
 
-final DynamicLibrary _nativeLib = _loadLibrary();
-
-DynamicLibrary _loadLibrary() {
-  if (rive.Platform.instance.isTesting) {
-    var paths = [
-      '',
-      '../../packages/rive_common/',
-    ];
-    if (Platform.isMacOS) {
-      for (final path in paths) {
-        try {
-          return DynamicLibrary.open(
-            '${path}shared_lib/build/bin/debug/librive_text.dylib',
-          );
-
-          // ignore: avoid_catching_errors
-        } on ArgumentError catch (_) {}
-      }
-    } else if (Platform.isLinux) {
-      for (final path in paths) {
-        try {
-          return DynamicLibrary.open(
-            '${path}shared_lib/build/bin/debug/librive_text.so',
-          );
-          // ignore: avoid_catching_errors
-        } on ArgumentError catch (_) {}
-      }
-    }
-  }
-
-  if (Platform.isAndroid) {
-    return DynamicLibrary.open('librive_text.so');
-  } else if (Platform.isWindows) {
-    return DynamicLibrary.open('rive_common_plugin.dll');
-  }
-  return DynamicLibrary.process();
-}
+DynamicLibrary get _nativeLib => RiveDynamicLibraryHelper.nativeLib;
 
 final Pointer<Void> Function() _makeYogaStyle = _nativeLib
     .lookup<NativeFunction<Pointer<Void> Function()>>('makeYogaStyle')
     .asFunction();
 
-final void Function(Pointer<Void>) _disposeYogaStyle = _nativeLib
-    .lookup<NativeFunction<Void Function(Pointer<Void>)>>('disposeYogaStyle')
-    .asFunction();
+final Pointer<NativeFunction<Void Function(Pointer<Void>)>>
+    _disposeYogaStyleNative =
+    _nativeLib.lookup<NativeFunction<Void Function(Pointer<Void>)>>(
+        'disposeYogaStyle');
+
+final void Function(Pointer<Void>) _disposeYogaStyle =
+    _disposeYogaStyleNative.asFunction();
 
 final Pointer<Void> Function() _makeYogaNode = _nativeLib
     .lookup<NativeFunction<Pointer<Void> Function()>>('makeYogaNode')
     .asFunction();
 
-final void Function(Pointer<Void>) _disposeYogaNode = _nativeLib
-    .lookup<NativeFunction<Void Function(Pointer<Void>)>>('disposeYogaNode')
-    .asFunction();
+final Pointer<NativeFunction<Void Function(Pointer<Void>)>>
+    _disposeYogaNodeNative =
+    _nativeLib.lookup<NativeFunction<Void Function(Pointer<Void>)>>(
+        'disposeYogaNode');
+
+final void Function(Pointer<Void>) _disposeYogaNode =
+    _disposeYogaNodeNative.asFunction();
 
 final void Function(Pointer<Void>, Pointer<Void>) _yogaNodeSetStyle = _nativeLib
     .lookup<NativeFunction<Void Function(Pointer<Void>, Pointer<Void>)>>(
@@ -323,6 +294,12 @@ final void Function(Pointer<Void>, Pointer<Void>, int) _yogaNodeInsertChild =
                     Int32 index)>>('yogaNodeInsertChild')
         .asFunction();
 
+final void Function(Pointer<Void>, Pointer<Void>) _yogaNodeRemoveChild =
+    _nativeLib
+        .lookup<NativeFunction<Void Function(Pointer<Void>, Pointer<Void>)>>(
+            'yogaNodeRemoveChild')
+        .asFunction();
+
 final void Function(Pointer<Void>) _yogaNodeClearChildren = _nativeLib
     .lookup<NativeFunction<Void Function(Pointer<Void>)>>(
         'yogaNodeClearChildren')
@@ -366,6 +343,9 @@ class _YGLayout extends Struct implements Layout {
   @override
   @Float()
   external double height;
+
+  @override
+  String toString() => 'Layout $left $top $width $height';
 }
 
 final _YGLayout Function(Pointer<Void>) _yogaNodeGetLayout = _nativeLib
@@ -394,6 +374,7 @@ final void Function(Pointer<Void>, Pointer<NativeFunction<_BaselineFuncFFI>>)
             'yogaNodeSetBaselineFunc')
         .asFunction();
 
+// ignore: unused_element
 final void Function(Pointer<Void>) _yogaNodeClearBaselineFunc = _nativeLib
     .lookup<NativeFunction<Void Function(Pointer<Void>)>>(
         'yogaNodeClearMeasureFunc')
@@ -417,13 +398,25 @@ final void Function(Pointer<Void>) _yogaNodeMarkDirty = _nativeLib
     .lookup<NativeFunction<Void Function(Pointer<Void>)>>('yogaNodeMarkDirty')
     .asFunction();
 
-class LayoutNodeFFI extends LayoutNode {
+class LayoutNodeFFI extends LayoutNode implements Finalizable {
+  static final _finalizer = NativeFinalizer(_disposeYogaNodeNative);
+  final bool isOwned;
   Pointer<Void> _nativePtr;
-  LayoutNodeFFI(this._nativePtr);
+  LayoutNodeFFI(this._nativePtr, this.isOwned) {
+    if (isOwned) {
+      _finalizer.attach(this, _nativePtr.cast(), detach: this);
+    }
+  }
 
   @override
   void dispose() {
-    _disposeYogaNode(_nativePtr);
+    if (_nativePtr == nullptr) {
+      return;
+    }
+    if (isOwned) {
+      _finalizer.detach(this);
+      _disposeYogaNode(_nativePtr);
+    }
     _callbackLookup.remove(_nativePtr);
     _nativePtr = nullptr;
   }
@@ -456,13 +449,17 @@ class LayoutNodeFFI extends LayoutNode {
   void insertChild(LayoutNode node, int index) => _yogaNodeInsertChild(
       _nativePtr, (node as LayoutNodeFFI)._nativePtr, index);
 
+  @override
+  void removeChild(LayoutNode node) =>
+      _yogaNodeRemoveChild(_nativePtr, (node as LayoutNodeFFI)._nativePtr);
+
   static Pointer<_YGSize>? _measuredSizePtr;
   static late _YGSize _measuredSize;
 
   // Store a hashmap to lookup pointer to layout nodes, necessary when using a
   // measure or baseline callback.
-  static final HashMap<Pointer<Void>, LayoutNodeFFI> _callbackLookup =
-      HashMap<Pointer<Void>, LayoutNodeFFI>();
+  static final HashMap<Pointer<Void>, WeakReference<LayoutNodeFFI>>
+      _callbackLookup = HashMap<Pointer<Void>, WeakReference<LayoutNodeFFI>>();
 
   MeasureFunction? _measureFunction;
   @override
@@ -482,8 +479,7 @@ class LayoutNodeFFI extends LayoutNode {
       _yogaNodeClearMeasureFunc(_nativePtr);
       return;
     }
-    _callbackLookup[_nativePtr] = this;
-
+    _callbackLookup[_nativePtr] = WeakReference(this);
     _yogaNodeSetMeasureFunc(_nativePtr, _proxyMeasurePointer);
   }
 
@@ -501,7 +497,7 @@ class LayoutNodeFFI extends LayoutNode {
       _yogaNodeClearMeasureFunc(_nativePtr);
       return;
     }
-    _callbackLookup[_nativePtr] = this;
+    _callbackLookup[_nativePtr] = WeakReference(this);
 
     _yogaNodeSetBaselineFunc(_nativePtr, _proxyBaselinePointer);
   }
@@ -515,7 +511,7 @@ class LayoutNodeFFI extends LayoutNode {
   // Static helper to bridge native call.
   static _YGSize _proxyMeasure(Pointer<Void> nodePtr, double width,
       int widthModeValue, double height, int heightModeValue) {
-    var node = _callbackLookup[nodePtr];
+    var node = _callbackLookup[nodePtr]?.target;
     if (node == null) {
       _measuredSize.width = 0;
       _measuredSize.height = 0;
@@ -535,7 +531,7 @@ class LayoutNodeFFI extends LayoutNode {
   static double _proxyBaseline(
       Pointer<Void> nodePtr, double width, double height) {
     double baseline = 0;
-    var node = _callbackLookup[nodePtr];
+    var node = _callbackLookup[nodePtr]?.target;
     if (node != null) {
       baseline = node._baselineFunction?.call(
             node,
@@ -551,13 +547,20 @@ class LayoutNodeFFI extends LayoutNode {
   void markDirty() => _yogaNodeMarkDirty(_nativePtr);
 }
 
-class LayoutStyleFFI extends LayoutStyle {
+class LayoutStyleFFI extends LayoutStyle implements Finalizable {
   Pointer<Void> _nativePtr;
+  static final _finalizer = NativeFinalizer(_disposeYogaStyleNative);
 
-  LayoutStyleFFI(this._nativePtr);
+  LayoutStyleFFI(this._nativePtr) {
+    _finalizer.attach(this, _nativePtr.cast(), detach: this);
+  }
 
   @override
   void dispose() {
+    if (_nativePtr == nullptr) {
+      return;
+    }
+    _finalizer.detach(this);
     _disposeYogaStyle(_nativePtr);
     _nativePtr = nullptr;
   }
@@ -759,4 +762,7 @@ class LayoutStyleFFI extends LayoutStyle {
 
 LayoutStyle makeLayoutStyle() => LayoutStyleFFI(_makeYogaStyle());
 
-LayoutNode makeLayoutNode() => LayoutNodeFFI(_makeYogaNode());
+LayoutNode makeLayoutNode() => LayoutNodeFFI(_makeYogaNode(), true);
+
+LayoutNode makeLayoutNodeExternal(dynamic ref) =>
+    LayoutNodeFFI(ref as Pointer<Void>, false);

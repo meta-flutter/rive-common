@@ -4,53 +4,8 @@
     "int": 1,
     "string": "artboard"
   },
-  "extends": "world_transform_component.json",
+  "extends": "layout_component.json",
   "properties": {
-    "clip": {
-      "type": "bool",
-      "initialValue": "true",
-      "key": {
-        "int": 196,
-        "string": "clip"
-      },
-      "description": "True when the artboard bounds clip its contents."
-    },
-    "width": {
-      "type": "double",
-      "initialValue": "0",
-      "key": {
-        "int": 7,
-        "string": "w"
-      },
-      "description": "Width of the artboard."
-    },
-    "height": {
-      "type": "double",
-      "initialValue": "0",
-      "key": {
-        "int": 8,
-        "string": "h"
-      },
-      "description": "Height of the artboard."
-    },
-    "x": {
-      "type": "double",
-      "initialValue": "0",
-      "key": {
-        "int": 9,
-        "string": "x"
-      },
-      "description": "X coordinate in editor world space."
-    },
-    "y": {
-      "type": "double",
-      "initialValue": "0",
-      "key": {
-        "int": 10,
-        "string": "y"
-      },
-      "description": "Y coordinate in editor world space."
-    },
     "originX": {
       "type": "double",
       "initialValue": "0",
@@ -130,10 +85,20 @@
       "initialValue": "Core.missingId",
       "initialValueRuntime": "-1",
       "key": {
-        "int": 434,
+        "int": 583,
         "string": "viewmodelid"
       },
       "description": "The view model attached to this artboard data context."
+    },
+    "viewModelInstanceId": {
+      "type": "Id",
+      "initialValue": "Core.missingId",
+      "key": {
+        "int": 584,
+        "string": "viewmodelinstanceid"
+      },
+      "description": "A view model instance attached for editing purposes.",
+      "runtime": false
     }
   }
 }

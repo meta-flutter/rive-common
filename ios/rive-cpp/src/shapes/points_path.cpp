@@ -28,7 +28,7 @@ const Mat2D& PointsPath::pathTransform() const
 
 void PointsPath::update(ComponentDirt value)
 {
-    if (hasDirt(value, ComponentDirt::Path) && skin() != nullptr && !m_Shape->canDeferPathUpdate())
+    if (hasDirt(value, ComponentDirt::Path) && skin() != nullptr)
     {
         // Path tracks re-adding ComponentDirt::Path if we deferred due to to
         // shape being invisible.
@@ -37,7 +37,7 @@ void PointsPath::update(ComponentDirt value)
     Super::update(value);
 }
 
-void PointsPath::markPathDirty()
+void PointsPath::markPathDirty(bool sendToLayout)
 {
     if (skin() != nullptr)
     {
