@@ -21,7 +21,7 @@ if (NOT CMAKE_BUILD_TYPE)
     message(STATUS "CMAKE_BUILD_TYPE not set, defaulting to Release.")
 endif ()
 
-project(rive-text
+project(rive_text
         VERSION "0.4.11"
         DESCRIPTION "Rive Text Library"
         LANGUAGES CXX C
@@ -189,4 +189,7 @@ target_include_directories(rive_text PUBLIC
         macos/yoga
 )
 
+configure_file(rive_text.pc.in rive_text.pc @ONLY)
+
 install(TARGETS rive_text DESTINATION lib)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/rive_text.pc DESTINATION lib/pkgconfig)
