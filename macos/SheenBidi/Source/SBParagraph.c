@@ -614,14 +614,12 @@ static SBBoolean ResolveParagraph(SBParagraphRef paragraph,
 SB_INTERNAL SBParagraphRef SBParagraphCreate(SBAlgorithmRef algorithm,
     SBUInteger paragraphOffset, SBUInteger suggestedLength, SBLevel baseLevel)
 {
-    const SBCodepointSequence *codepointSequence = &algorithm->codepointSequence;
-    SBUInteger stringLength = codepointSequence->stringLength;
     SBUInteger actualLength;
 
     SBParagraphRef paragraph;
 
     /* The given range MUST be valid. */
-    SBAssert(SBUIntegerVerifyRange(stringLength, paragraphOffset, suggestedLength) && suggestedLength > 0);
+    SBAssert(SBUIntegerVerifyRange(&algorithm->codepointSequence->stringLength, paragraphOffset, suggestedLength) && suggestedLength > 0);
 
     SB_LOG_BLOCK_OPENER("Paragraph Input");
     SB_LOG_STATEMENT("Paragraph Offset", 1, SB_LOG_NUMBER(paragraphOffset));
