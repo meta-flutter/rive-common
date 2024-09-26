@@ -78,6 +78,7 @@ SB_INTERNAL void SBUIntegerNormalizeRange(SBUInteger actualLength,
     }
 }
 
+#ifdef DEBUG
 SB_INTERNAL SBBoolean SBUIntegerVerifyRange(SBUInteger actualLength,
     SBUInteger rangeOffset, SBUInteger rangeLength)
 {
@@ -87,6 +88,7 @@ SB_INTERNAL SBBoolean SBUIntegerVerifyRange(SBUInteger actualLength,
         && rangeOffset <= possibleLimit
         && possibleLimit <= actualLength;
 }
+#endif
 
 SBBidiType SBCodepointGetBidiType(SBCodepoint codepoint)
 {
