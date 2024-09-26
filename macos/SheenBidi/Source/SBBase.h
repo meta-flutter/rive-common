@@ -32,9 +32,10 @@
 SB_INTERNAL void SBUIntegerNormalizeRange(SBUInteger actualLength,
     SBUInteger *rangeOffset, SBUInteger *rangeLength);
 
+#ifdef DEBUG
 SB_INTERNAL SBBoolean SBUIntegerVerifyRange(SBUInteger actualLength,
     SBUInteger rangeOffset, SBUInteger rangeLength);
-
+#endif
 
 #define SBNumberGetMax(first, second)           \
 (                                               \
