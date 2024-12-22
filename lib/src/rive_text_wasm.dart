@@ -730,7 +730,7 @@ Future<bool> initFont() async {
           ? 'http://localhost:8282/release/$source'
           : isRelative
               ? source
-              : 'https://cdn.jsdelivr.net/npm/@rive-app/flutter-wasm@$wasmVersion/build/bin/release/$source'
+              : 'assets/wasm/js/$source'
       ..type = 'application/javascript'
       ..defer = true;
 
