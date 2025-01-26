@@ -22,7 +22,7 @@ if (NOT CMAKE_BUILD_TYPE)
 endif ()
 
 project(rive_text
-        VERSION "0.4.11"
+        VERSION "0.8.4"
         DESCRIPTION "Rive Text Library"
         LANGUAGES CXX C
 )
