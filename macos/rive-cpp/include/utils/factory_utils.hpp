@@ -6,6 +6,7 @@
 #define _RIVE_FACTORY_UTILS_HPP_
 
 #include "rive/factory.hpp"
+#include <cstdlib>
 
 namespace rive
 {
