@@ -1,5 +1,6 @@
 #ifdef WITH_RIVE_AUDIO
 #include "rive/math/simd.hpp"
+#include <cstdlib>
 #ifdef __APPLE__
 #include <TargetConditionals.h>
 #if TARGET_IPHONE_SIMULATOR || TARGET_OS_MACCATALYST || TARGET_OS_IPHONE
